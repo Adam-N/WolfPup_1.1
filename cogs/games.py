@@ -366,6 +366,32 @@ class GamesCog(commands.Cog, name='games'):
                                                              'worth. You will need to reply with either a 1 or 11')
         await ctx.send(embed=embed)
 
+    @commands.command()
+    async def random(self, ctx, number: int = None):
+        if not number:
+            number = random.randint(1, 100)
+        elif number:
+            number = random.randint(1, number)
+        await ctx.send(f"`{number}`")
+
+    @commands.command()
+    async def num_gen(self, ctx, num1: int = None, num2: int = None):
+        if not num1 or not num2:
+            await ctx.send("`You need to send two whole numbers. The first is how many random numbers, "
+                           "the second is ceiling of your random numbers`", delete_after=5)
+            return
+        elif num1 > 100:
+            await ctx.send("Please choose a number less than 100 to generate.", delete_after=5)
+            return
+        number_list = []
+        for x in range(0,num1):
+            number_list.append(str(random.randint(1,num2)))
+
+        list_string = ", ".join(number_list)
+        await ctx.send(f"`{list_string}`")
+
+
+'''
     @commands.command(aliases=['rpg', 'playrpg'])
     async def rpg_game(self, ctx):
         playing_message = await ctx.send("You slowly open your eyes...  \n"
@@ -421,7 +447,7 @@ class GamesCog(commands.Cog, name='games'):
             elif response.content == '2':
                 await playing_message.edit('Yourn'
                             )
-
+'''
 
 def setup(bot):
     bot.add_cog(GamesCog(bot))

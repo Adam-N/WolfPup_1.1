@@ -2,42 +2,36 @@ import json
 import random
 import discord
 from discord.ext import commands
-import datetime
-
+from lib.util import Util
+import datetime as dt
 from master import Master
 
 
 class Welcome(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.bot_count = None
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
         with open(f'config/{member.guild.id}/config.json', 'r') as f:
             config = json.load(f)
         config_channel = self.bot.get_channel(config['channel_config']['welcome_channel'])
-
-        welcome_embed = discord.Embed(title="Member joined", description=f'{member} has joined.')
+        welcome_embed = discord.Embed(title="Member joined", description=f'{member.name} has joined.')
         welcome_embed.add_field(name="ID:", value=f"{member.id}", inline=True)
-        created = datetime.datetime.utcnow() - member.created_at
-        days = created.days
-        years = 0
-        if days > 365:
-            years = int(days / 365)
-            days = int(days - (years * 365))
-        if days < 5:
-            welcome_embed.add_field(name="**New Account!**", value=" ")
-        seconds = created.seconds
-        hours = int(seconds / 3600)
-        minutes = int((seconds - (hours * 3600)) / 60)
-        seconds = int(seconds - ((hours * 3600) + (minutes * 60)))
-        welcome_embed.add_field(name="Created ", value=f"{years} years, {days} days, {hours} hours, {minutes} minutes, {seconds} seconds ago", inline=True)
-        welcome_embed.set_thumbnail(url=member.avatar_url)
-        welcome_embed.timestamp = datetime.datetime.utcnow()
+        created = discord.utils.utcnow() - member.created_at
+        welcome_embed.add_field(name="Created:",
+                              value=f"{Util.deltaconv(int(created.total_seconds()))} ago")
+        welcome_embed.set_thumbnail(url=member.avatar.url)
+        welcome_embed.timestamp = discord.utils.utcnow()
         i = 0
-        for member in member.guild.members:
-            if member.bot:
-                i += 1
+        if not self.bot_count:
+            for member in member.guild.members:
+                if member.bot:
+                    i += 1
+            self.bot_count = i
+        elif self.bot_count:
+            i = self.bot_count
         total = member.guild.member_count
         welcome_embed.add_field(name="Join number: ", value=f"{total - i}", inline=True)
         await config_channel.send(embed=welcome_embed)
@@ -49,7 +43,7 @@ class Welcome(commands.Cog):
         role = before.guild.get_role(config['role_config']['posse'])
         welcome_channel = self.bot.get_channel(config['channel_config']['lounge'])
 
-        if role not in before.roles and role in after.roles:
+        if role not in before.roles and role in after.roles and before.joined_at > discord.utils.utcnow() - dt.timedelta(minutes=20):
             ment = after.mention
             welcome_messages = [
                 f"\U0001f4e2 \U0000269f Say hello to {ment}!",
@@ -77,26 +71,20 @@ class Welcome(commands.Cog):
         with open(f'config/{member.guild.id}/config.json', 'r') as f:
             config = json.load(f)
         config_channel = self.bot.get_channel(config['channel_config']['welcome_channel'])
-        leave_embed = discord.Embed(title="Member left", description=f'{member} has left')
-        leave_embed.add_field(name="Nick: ", value=f"{member.nick}", inline=True)
+        leave_embed = discord.Embed(title="Member left", description=f'{member.name} has left')
+        if member.nick:
+            leave_embed.add_field(name="Nick: ", value=f"{member.nick}", inline=True)
         leave_embed.add_field(name="ID:", value=f"{member.id}", inline=True)
-        joined = datetime.datetime.utcnow() - member.joined_at
-        days = joined.days
-        years = 0
-        if days > 365:
-            years = int(days / 365)
-            days = int(days - (years * 365))
-        seconds = joined.seconds
-        hours = int(seconds / 3600)
-        minutes = int((seconds - (hours * 3600)) / 60)
-        seconds = int(seconds - ((hours * 3600) + (minutes * 60)))
-        leave_embed.add_field(name="Joined", value=f"{years} years, {days} days, {hours} hours, {minutes} minutes, {seconds} seconds ago")
+        joined = discord.utils.utcnow() - member.joined_at
+
+        leave_embed.add_field(name="Joined",
+                              value=f"{Util.deltaconv(int(joined.total_seconds()))} ago")
         mentions = [role.mention for role in member.roles if role.name != '@everyone']
         if not mentions:
             mentions = 'N/A'
         leave_embed.add_field(name="Roles:", value=" ".join(mentions))
-        leave_embed.set_thumbnail(url=member.avatar_url)
-        leave_embed.timestamp = datetime.datetime.utcnow()
+        leave_embed.set_thumbnail(url=member.avatar.url)
+        leave_embed.timestamp = discord.utils.utcnow()
         await config_channel.send(embed=leave_embed)
 
 

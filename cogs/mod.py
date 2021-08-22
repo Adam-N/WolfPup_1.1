@@ -24,7 +24,9 @@ class Mod(commands.Cog):
         if await Util.check_channel(ctx, True):
             if member is None:
                 member = ctx.author
-            await ctx.send(f'{member.display_name} joined on {member.joined_at}')
+            await ctx.send(f'{member.display_name} joined at {dt.datetime.strftime(member.joined_at, "%H:%M %b %dth %Y")}.'
+                           f' That\'s {Util.deltaconv(int((discord.utils.utcnow()-member.joined_at).total_seconds()))}'
+                           f' ago!')
 
     @commands.command(name='top_role', aliases=['toprole'])
     @commands.guild_only()
@@ -45,7 +47,7 @@ class Mod(commands.Cog):
                 member = ctx.author
             perms = '\n'.join(perm for perm, value in member.guild_permissions if value)
             embed = discord.Embed(title='Permissions for:', description=ctx.guild.name, colour=member.colour)
-            embed.set_author(icon_url=member.avatar_url, name=str(member))
+            embed.set_author(icon_url=member.avatar.url, name=str(member))
             embed.add_field(name='\uFEFF', value=perms)
             await ctx.send(content=None, embed=embed)
 
@@ -55,12 +57,13 @@ class Mod(commands.Cog):
         if await Util.check_channel(ctx, True):
             if member is None:
                 member = ctx.author
-            embed = discord.Embed(title=f"{member.name}'s Profile", value="Check this out")
-            embed.add_field(name="Joined at", value=f"{dt.datetime.strftime(member.joined_at, '%d %B, %Y  %H:%M')}")
-            embed.add_field(name="Created at", value=f"{dt.datetime.strftime(member.created_at, '%d %B, %Y  %H:%M')}")
+            embed = discord.Embed(title=f"{member.name}'s Profile", description="Check this out")
+            embed.add_field(name="Joined:",
+                            value=f"{Util.deltaconv(int((discord.utils.utcnow()-member.joined_at).total_seconds()))} ago")
+            embed.add_field(name="Created on", value=f"{dt.datetime.strftime(member.created_at, '%d %B, %Y  %H:%M')}")
             embed.add_field(name="Username", value=f"{member.name}{member.discriminator}")
             embed.add_field(name="Top role:", value=f"{member.top_role}")
-            embed.set_thumbnail(url=member.avatar_url)
+            embed.set_thumbnail(url=member.avatar.url)
             await ctx.send(embed=embed)
 
     @commands.command(hidden=True)
@@ -88,37 +91,36 @@ class Mod(commands.Cog):
                 for role in after.roles:
                     if role not in before.roles:
                         embed.add_field(name='Role change:', value=f'{role.name} added')
-        embed.set_footer(text=f'User ID:{after.id}', icon_url=after.avatar_url)
+        embed.set_footer(text=f'User ID:{after.id}', icon_url=after.avatar.url)
         await channel.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload):
-        try:
-            with open(f'config/{payload.guild_id}/config.json', 'r') as f:
-                config = json.load(f)
-            modlog_channel = self.bot.get_channel(config['channel_config']['modlog_channel'])
-            if not payload.cached_message:
-                deleted_channel = self.bot.get_channel(payload.channel_id)
-                message_id = payload.message_id
-                embed = discord.Embed(title='Message Deleted', description='Was not in internal cache. Cannot fetch '
-                                                                           'context.')
-                embed.add_field(name='Deleted in:', value=deleted_channel.mention)
-                embed.add_field(name='Message ID', value=message_id)
-                await modlog_channel.send(embed=embed)
-                return
-            elif payload.cached_message:
-                message = payload.cached_message
-                if config['prefix'] in message.content[:len(config['prefix'])] or message.author.bot:
-                    return
-                embed = discord.Embed(title='Message Deleted')
-                embed.add_field(name='Message Author:', value=message.author.mention)
-                embed.add_field(name='Channel:', value=message.channel.mention)
-                embed.add_field(name='Message Content:', value=message.content)
-                embed.set_footer(text=f'Author ID: {message.author.id} | Message ID: {message.id}')
-                embed.set_thumbnail(url=message.author.avatar_url)
-                await modlog_channel.send(embed=embed)
-        except (AttributeError, discord.errors.HTTPException):
+        with open(f'config/{payload.guild_id}/config.json', 'r') as f:
+            config = json.load(f)
+        modlog_channel = self.bot.get_channel(config['channel_config']['modlog_channel'])
+        if not payload.cached_message:
+            deleted_channel = self.bot.get_channel(payload.channel_id)
+            message_id = payload.message_id
+            embed = discord.Embed(title='Message Deleted', description='Was not in internal cache. Cannot fetch '
+                                                                       'context.')
+            embed.add_field(name='Deleted in:', value=deleted_channel.mention)
+            embed.add_field(name='Message ID', value=message_id)
+            await modlog_channel.send(embed=embed)
             return
+        elif payload.cached_message:
+            message = payload.cached_message
+            if config['prefix'] in message.content[:len(config['prefix'])] or message.author.bot:
+                return
+            embed = discord.Embed(title='Message Deleted')
+            embed.add_field(name='Message Author:', value=message.author.mention)
+            embed.add_field(name='Channel:', value=message.channel.mention)
+            embed.add_field(name='Message Content:', value=message.content)
+            embed.set_footer(text=f'Author ID: {message.author.id} | Message ID: {message.id}')
+            embed.set_thumbnail(url=message.author.avatar.url)
+            await modlog_channel.send(embed=embed)
+
+
 
     @commands.Cog.listener()
     async def on_raw_message_edit(self, payload):
@@ -146,7 +148,7 @@ class Mod(commands.Cog):
                 embed.add_field(name='Message Before:', value=payload.cached_message.content)
                 embed.add_field(name='Message After:', value=data['content'])
                 embed.set_footer(text=f'User ID: {edited_message.author.id}')
-                embed.set_thumbnail(url=edited_message.author.avatar_url)
+                embed.set_thumbnail(url=edited_message.author.avatar.url)
                 await modlog_channel.send(embed=embed)
         except (AttributeError, discord.errors.HTTPException):
             return

@@ -32,7 +32,7 @@ class Starboard(commands.Cog, name='Starboard'):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
-        print('in')
+        self_starred = False
         try:
             if os.path.isfile(f'config/{payload.guild_id}/config.json'):
                 with open(f'config/{payload.guild_id}/config.json', 'r') as f:
@@ -40,11 +40,15 @@ class Starboard(commands.Cog, name='Starboard'):
             channel = self.bot.get_channel(payload.channel_id)
             starboard_channel = self.bot.get_channel(config['starboard_config']['starboard_channel'])
             message = await channel.fetch_message(payload.message_id)
+            print(message.attachments)
+            print(message.content)
             for react in message.reactions:
                 if react.emoji == config['starboard_config']['star_react']:
+                    list = await react.users().flatten()
+                    if message.author in list:
+                        self_starred = True
                     reaction = react
                     break
-            # reaction = discord.utils.get(message.reactions, emoji=self.bot.get_emoji(payload.emoji.id))
             if channel.id != starboard_channel.id:
                 already_posted = discord.utils.get(message.reactions, emoji=config['starboard_config']['starred_react'])
                 if payload.emoji.name == config['starboard_config']['star_react']:
@@ -52,13 +56,19 @@ class Starboard(commands.Cog, name='Starboard'):
                         copy_embed = ""
                         if message.embeds:
                             copy_embed = message.embeds[0].to_dict()
-                            if message.content:
+
+                            if message.content and not copy_embed['url']:
                                 content = message.content.__add__(f'\n\n**Link Preview:**\n{copy_embed["description"]}')
+                            elif message.content and copy_embed['url']:
+                                content = " "
                             else:
                                 try:
-                                    content = copy_embed.description
+                                    content = copy_embed["description"]
                                 except:
                                     pass
+                                if not content:
+                                    content = copy_embed['title']
+
                             if "fields" in copy_embed:
                                 for embeds in message.embeds:
                                     for field in embeds.fields:
@@ -66,19 +76,42 @@ class Starboard(commands.Cog, name='Starboard'):
                                         content = content.__add__(f'\n{field.value}')
                         else:
                             content = message.content
-                        embed = discord.Embed(title=f"{message.author} said...",
-                                              description=f'{content}\n\n[Jump to Message](https://discordapp.com/channels/{payload.guild_id}/{payload.channel_id}/{payload.message_id})',
-                                              colour=0x784fd7,
-                                              timestamp=message.created_at)
-                        embed.set_thumbnail(url=message.author.avatar_url)
+                        if channel.type is discord.ChannelType.text:
+                            embed = discord.Embed(title=f"{message.author} said...",
+                                                  description=f'{content}\n\n[Jump to Message]({message.jump_url})',
+                                                  colour=0x784fd7,
+                                                  timestamp=message.created_at)
+                        elif channel.type is discord.ChannelType.public_thread or channel.type is discord.ChannelType.public_thread:
+                            embed = discord.Embed(title=f"{message.author} said...",
+                                                  description=f'{content}',
+                                                  colour=0x784fd7,
+                                                  timestamp=message.created_at)
+                        else:
+                            raise KeyError('Something went wrong with starboard.')
+
+                        embed.set_thumbnail(url=message.author.avatar.url)
                         if message.embeds:
-                            if copy_embed.image:
-                                embed.set_image(url=copy_embed.image.url)
-                            elif copy_embed.video:
-                                embed.set_image(url=copy_embed.thumbnail.url)
+                            try:
+                                if copy_embed['image']:
+                                    embed.set_image(url=copy_embed['image']['url'])
+                            except:
+                                pass
+                            try:
+                                if copy_embed["video"]:
+                                    embed.set_image(url=copy_embed['thumbnail']['url'])
+                            except:
+                                pass
+                            try:
+                                if copy_embed["url"]:
+                                    embed.set_image(url=copy_embed['url'])
+                            except:
+                                pass
                         elif message.attachments:
                             embed.set_image(url=message.attachments[0].url)
-                        embed.set_footer(icon_url=self.star_url, text='Original Posted')
+                        if not self_starred:
+                            embed.set_footer(icon_url=self.star_url, text='Original Posted')
+                        elif self_starred:
+                            embed.set_footer(icon_url=self.star_url, text='Self-Starred')
                         await starboard_channel.send(
                             content=f"> **Posted in** {channel.mention} by {message.author.mention}", embed=embed)
                         for guild in self.bot.guilds:
@@ -88,6 +121,7 @@ class Starboard(commands.Cog, name='Starboard'):
                         await message.add_reaction(react)
         except KeyError:
             print('Starboard Settings not Initialized. Skipping reaction check.')
+            raise KeyError('Starboard settings not initialised')
 
 
 def setup(bot):

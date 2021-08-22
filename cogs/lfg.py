@@ -18,13 +18,11 @@ class LFGCog(commands.Cog, name='lfg'):
 
     @tasks.loop(minutes=30)
     async def lfg_message(self):
-        mod_mail = self.bot.get_user(575252669443211264)
         guild = self.bot.get_guild(334925467431862272)
         if os.path.isfile(f'config/{guild.id}/config.json'):
             with open(f'config/{guild.id}/config.json', 'r') as f:
                 config = json.load(f)
-            staff = discord.utils.get(guild.roles, name="Staff")
-            help_channel = guild.get_channel(515352207042936832)
+
 
             for lfg in config["lfg_config"]:
                 channel = self.bot.get_channel(int(config["lfg_config"][lfg]))
@@ -61,7 +59,7 @@ class LFGCog(commands.Cog, name='lfg'):
                         for role in guild.roles:
                             if "XIV" in role.name and role.name not in ["Final Fantasy XIV", "XIV-Goobues",
                                                                         "XIV-Icepick",
-                                                                        "XIV-GITS"]:
+                                                                        "XIV-GITS", "XIV-Pomrangers"]:
                                 tags.append(role.mention)
                         role_string = role_string.join(tags)
                         bot_channel = guild.get_channel(586182007852367893)

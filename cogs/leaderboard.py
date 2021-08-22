@@ -28,8 +28,8 @@ class Leaderboard(commands.Cog):
             if await Util.check_channel(ctx):
                 new_embed = discord.Embed(title=f':trophy: __**User Leaderboards**__ :trophy:',
                                           color=discord.Colour.gold())
-                new_embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon_url)
-                new_embed.set_footer(text=f'Results provided by: {self.bot.user.name}', icon_url=self.bot.user.avatar_url)
+                new_embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+                new_embed.set_footer(text=f'Results provided by: {self.bot.user.name}', icon_url=self.bot.user.avatar.url)
                 for stat in self.leaderboards:
                     if leaderboard is not None:
                         if leaderboard in self.leaderboards[stat]:

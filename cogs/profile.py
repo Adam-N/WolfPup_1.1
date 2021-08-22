@@ -134,7 +134,6 @@ class Profile(commands.Cog):
         """Displays your profile card."""
         async with ctx.channel.typing():
             self.server_db = self.db[str(ctx.guild.id)]['users']
-            print('in')
             if await Util.check_channel(ctx):
                 if member is None:
                     member = ctx.author
@@ -167,7 +166,7 @@ class Profile(commands.Cog):
                     # # Avatar Draw # #
                     avatar_img = Image.open('assets/gigi_avatar.png')
                     if member.avatar:
-                        avatar_asset = member.avatar_url_as(format='png', size=128)
+                        avatar_asset = member.avatar.url_as(format='png', size=128)
                         buffer_img = io.BytesIO()
                         await avatar_asset.save(buffer_img)
                         buffer_img.seek(0)

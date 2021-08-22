@@ -10,6 +10,7 @@ from lib.mongo import Mongo
 from cogs.level import Level
 from cogs.profile import Profile
 from cogs.thank import Thank
+from lib.util import Util
 
 
 class Master(commands.Cog, name='Master'):
@@ -38,7 +39,7 @@ class Master(commands.Cog, name='Master'):
             hours, remainder = divmod(time_converted.total_seconds(), 3600)
             minutes, seconds = divmod(remainder, 60)
             new_embed = discord.Embed()
-            new_embed.add_field(name="Uptime", value='{} hours, {} minutes, {} seconds'.format(hours, minutes, seconds),
+            new_embed.add_field(name="Uptime", value=f'{Util.deltaconv(int(time_converted.total_seconds()))}',
                                 inline=True)
             new_embed.set_thumbnail(url='https://media.discordapp.net/attachments/742389103890268281/746419792000319580'
                                         '/shiinabat_by_erickiwi_de3oa60-pre.png?width=653&height=672')

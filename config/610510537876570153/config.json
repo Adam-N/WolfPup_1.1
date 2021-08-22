@@ -4,7 +4,7 @@
     "config_channel": 742389034420142090,
     "modlog_channel": 824405415793918033,
     "rolepost_channel": 824405415793918033,
-    "welcome_channel": 742389034420142090,
+    "welcome_channel": 742534075583037540,
     "lounge": 742389034420142090,
     "bot_channels": [
       742534075583037540
@@ -30,16 +30,26 @@
   },
   "triumphant_config": {
     "triumph_channel": 742389034420142090,
-    "triumph_react": "\ud83d\ude04"
+    "triumph_react": "\u2764\ufe0f"
   },
   "starboard_config": {
-    "starboard_channel": 742534075583037540,
-    "star_react": "\ud83d\udd25",
-    "starred_react": "\ud83d\udc4e",
+    "starboard_channel": 742389103890268281,
+    "star_react": "\u2b50",
+    "starred_react": "\ud83c\udf1f",
     "threshold": 1
   },
   "lfg_config": {
     "dtg_lfg": 836055327790596186,
     "xiv_lfg": 858538861410648085
+  },
+  "wishwall_xiv": {
+    "channel": 786758347818008626,
+    "image": "https://cdn.discordapp.com/attachments/532380077896237061/786762838789849139/Cid_ARR.jpg",
+    "text": "has requested help!"
+  },
+  "wishwall_dtg": {
+    "channel": 746576322452783175,
+    "image": "https://media.discordapp.net/attachments/767568459939708950/800966534956318720/destiny_icon_grey.png?width=630&height=670",
+    "text": "has made a wish!"
   }
 }

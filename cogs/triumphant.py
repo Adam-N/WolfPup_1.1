@@ -116,13 +116,13 @@ class Triumphant(commands.Cog, name='Triumphant'):
             embed.add_field(name="IDs:", value=id_string)
         if not msg.author.bot:
             embed.set_footer(text=f"ID:{msg.author.id}")
-            embed.set_thumbnail(url=msg.author.avatar_url)
+            embed.set_thumbnail(url=msg.author.avatar.url)
             embed.add_field(name="Nominated User:", value=f"{msg.author.name}")
         if msg.author.bot:
             if not_bot_user:
                 embed.set_footer(text=f"ID:{not_bot_user}")
                 avatar_member = self.bot.get_user(not_bot_user)
-                embed.set_thumbnail(url=avatar_member.avatar_url)
+                embed.set_thumbnail(url=avatar_member.avatar.url)
                 embed.add_field(name="Nominated User:", value=f"{avatar_member.name}")
         if msg.embeds:
             if "image" in copy_embed:
@@ -216,7 +216,7 @@ class Triumphant(commands.Cog, name='Triumphant'):
         list_embed.add_field(name="IDs:", value=f"{id_list}")
         await ctx.send(embed=list_embed)
 
-    @commands.command(hidden=True)
+    @commands.command(aliases=["give_triumph", "triumph_give"],hidden=True)
     @has_permissions(manage_messages=True)
     async def give_triumphant(self, ctx):
         with open(f'config/{ctx.guild.id}/config.json', 'r') as f:
@@ -254,7 +254,6 @@ class Triumphant(commands.Cog, name='Triumphant'):
                     f'config/{ctx.guild.id}/triumphant.json'):
                 with open(f'config/{ctx.guild.id}/triumphant.json', 'r') as f:
                     users = json.load(f)
-                    print(users)
                 with open(f'config/{ctx.guild.id}/triumphant_copy.json', 'w') as f:
                     json.dump(users, f)
 

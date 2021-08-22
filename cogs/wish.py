@@ -1,205 +1,206 @@
 import os
 import json
 import asyncio
-from datetime import datetime
 import discord
 from discord.ext import commands
-from discord.utils import get
 
 
-class WishWall(commands.Cog, name='WishWall'):
+class WishWall(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.prefix = ''
-        self.url = 'https://cdn.discordapp.com/attachments/767568459939708950/800966534956318720/destiny_icon_grey.png'
 
-    @commands.command(name='init_wishwall', hidden=True, aliases=['init_ww', 'ww_init'])
+    @commands.command(name='init_wish', hidden=True, aliases=['init_iw', 'iw_init'])
     @commands.is_owner()
-    async def init_wishwall(self, ctx):
+    async def init_wish(self, ctx):
         if os.path.isfile(f'config/{ctx.guild.id}/config.json'):
             with open(f'config/{ctx.guild.id}/config.json', 'r') as f:
                 config = json.load(f)
-            wishwall_config = {
-                'wishwall_channel': ctx.channel.id,
-                'conf_react': None,
-                'decl_react': None
-            }
-            config['wishwall_config'] = wishwall_config
+
+            wishwall_xiv = {
+                'channel': ctx.channel.id,
+                'image': 'https://cdn.discordapp.com/attachments/532380077896237061/786762838789849139/Cid_ARR.jpg',
+                'text': 'has requested help!'}
+
+            config['wishwall_xiv'] = wishwall_xiv
             with open(f'config/{ctx.guild.id}/config.json', 'w') as f:
                 json.dump(config, f, indent=2)
-            await ctx.send(embed=discord.Embed(title=f'WishWall config initialized'))
 
-    @staticmethod
-    async def build_embed(self, old_embed: discord.Embed = None,
-                          author: str = None, platform: str = None, description: str = None,
+            wishwall_dtg = {
+                'channel': ctx.channel.id,
+                'image': 'https://media.discordapp.net/attachments/767568459939708950/800966534956318720'
+                         '/destiny_icon_grey.png?width=630&height=670',
+                'text': 'has made a wish!'}
+
+            config['wishwall_dtg'] = wishwall_dtg
+            with open(f'config/{ctx.guild.id}/config.json', 'w') as f:
+                json.dump(config, f, indent=2)
+
+            await ctx.send(embed=discord.Embed(title=f'Wishwall config initialized'))
+
+    async def build_embed(self, old_embed: discord.Embed = None, author: str = None, description: str = None,
+                          id: int = 0,
                           add: discord.Member = None, remove: discord.Member = None,
-                          error: bool = False, error_type: int = 0):
+                          error: bool = False, error_type: int = 0, channel: discord.TextChannel = None):
+        if os.path.isfile(f'config/{str(channel.guild.id)}/config.json'):
+            with open(f'config/{str(channel.guild.id)}/config.json', 'r') as f:
+                config = json.load(f)
+        if 'xiv' in channel.name:
+            config = config['wishwall_xiv']
+
+        elif 'dtg' in channel.name:
+            config = config['wishwall_dtg']
+        else:
+            raise KeyError('Error with wishwall_config')
         if not error:
             if old_embed:
                 new_embed = discord.Embed(title=old_embed.title,
                                           description=old_embed.description,
                                           color=old_embed.color)
-                new_embed.add_field(name=old_embed.fields[0].name,
-                                    value=old_embed.fields[0].value,
-                                    inline=True)
-                new_embed.set_thumbnail(url=self.url)
+                new_embed.set_thumbnail(url=config['image'])
                 new_embed.set_footer(text=old_embed.footer.text)
                 new_embed.timestamp = old_embed.timestamp
                 if add:
-                    user_list = old_embed.fields[1].value
+                    user_list = old_embed.fields[0].value
                     if add.mention not in user_list:
                         user_list = user_list.replace('N/A', '')
                         user_list += '\n' + str(add.mention)
                 elif remove:
-                    user_list = old_embed.fields[1].value
+                    user_list = old_embed.fields[0].value
                     if remove.mention in user_list:
                         user_list = user_list.replace(remove.mention, '')
                         if len(user_list) == 0:
                             user_list = 'N/A'
-                new_embed.add_field(name=old_embed.fields[1].name,
+                new_embed.add_field(name=old_embed.fields[0].name,
                                     value=user_list,
                                     inline=True)
-            if author and platform and description:
-                new_embed = discord.Embed(title=f'{author} has made a new wish!',
+            if author and description:
+                new_embed = discord.Embed(title=f'{author} {config["text"]}',
                                           description=f'\"{description}\"',
                                           color=0xff0209)
-                new_embed.add_field(name='**Platform:**',
-                                    value=f'{platform}',
-                                    inline=True)
                 new_embed.add_field(name='**Accepted by:**',
                                     value='N/A',
                                     inline=True)
-                new_embed.set_thumbnail(url=self.url)
-                new_embed.set_footer(text=f'Created by: {author}')
-                new_embed.timestamp = datetime.utcnow()
+                new_embed.set_thumbnail(url=config['image'])
+                new_embed.set_footer(text=f'User ID: {id}')
+                new_embed.timestamp = discord.utils.utcnow()
         else:
             new_embed = discord.Embed(title=f'**Error**',
                                       color=0xff0209)
             if error_type == 1:
-                new_embed.description = (f'Configuration for WishWall is missing or unformatted.\n' +
-                                         f'*Please contact staff for assistance.*')
+                new_embed.description = (f'Configuration for Wishwall is missing or unformatted.\n' +
+                                         f'*Please contact staff for assisstance.*')
+
             elif error_type == 2:
-                new_embed.description = (f'Missing argument. Please properly format your wish.\n' +
-                                         f'*{self.prefix}wish* ***<__platform__>*** *<description>*')
-            elif error_type == 3:
-                new_embed.description = (f'Missing argument. Please properly format your wish.\n' +
-                                         f'*{self.prefix}wish <platform>* ***<__description__>***')
+                new_embed.description = (f'Please include a full description of your request.\n' +
+                                         f'*{self.prefix}commission* ***<__description__>***')
+
             else:
                 new_embed.description = (f'An unspecified error has occured while executing command.\n' +
                                          f'*Please contact staff for assistance.*')
+
         return new_embed
 
-    async def build_embed_reacts(self, message, config):
-        if message.reactions:
-            for react in message.reactions:
-                async for user in react.users():
-                    if not user == self.bot.user:
-                        await react.remove(user)
-        else:
-            await discord.Message.add_reaction(message, config['conf_react'])
-            await discord.Message.add_reaction(message, config['decl_react'])
-
-    @commands.command(name='wish')
-    async def wish(self, ctx, platform: str = None, *args):
-        """Use this in the WishWall channel to make a wish!"""
+    @commands.command(aliases=['comm', 'commission'],
+                      description="Use this to make a wish in #xiv-ironworks or #dtg-wishwall")
+    async def wish(self, ctx, *args):
+        """This command allows you to make a wish for what you would like to do in game!!"""
         self.prefix = ctx.prefix
         channel = await self.bot.fetch_channel(ctx.channel.id)
-        author = ctx.message.author
-        ps_emote = get(ctx.message.guild.emojis, name='ps4')
-        xb_emote = get(ctx.message.guild.emojis, name='xbox')
-        pc_emote = get(ctx.message.guild.emojis, name='pc')
-        alias_list = {f'{ps_emote} Playstation': {'playstation', 'ps'},
-                      f'{xb_emote} Xbox': {'xbox', 'xb'},
-                      f'{pc_emote} Steam': {'pc', 'steam'}}
-        if platform:
-            for alias in alias_list:
-                if platform.lower() in alias_list[alias]:
-                    platform = alias
-                    break
-            if platform not in alias_list.keys():
-                platform = None
-        wish_desc = ' '.join(args)
+        comm_desc = ' '.join(args)
         if os.path.isfile(f'config/{str(ctx.guild.id)}/config.json'):
             with open(f'config/{str(ctx.guild.id)}/config.json', 'r') as f:
                 config = json.load(f)
-        try:
-            config = config['wishwall_config']
-        except KeyError:
-            sent = await channel.send(embed=(await self.build_embed(self, error=True, error_type=1)))
-            await asyncio.sleep(5)
-            await sent.delete()
+        if 'xiv' in channel.name:
+            config = config['wishwall_xiv']
+
+        elif 'dtg' in channel.name:
+            config = config['wishwall_dtg']
+        else:
+            raise KeyError('Error with wishwall_config')
+        if channel.id != config['channel']:
+            await ctx.send('This command must be used in the correct channel', delete_after=10)
+            await ctx.message.delete()
             return
-        if channel.id == config['wishwall_channel']:
-            if author.nick:
-                wish_owner = str(author.nick)
-            else:
-                wish_owner = str(author)[:-5]
-            if not platform:
-                sent = await channel.send(embed=(await self.build_embed(self, error=True, error_type=2)))
+
+        elif channel.id == config['channel']:
+            comm_owner = ctx.message.author.display_name
+            comm_id = ctx.message.author.id
+            if len(comm_desc) == 0:
+                sent = await channel.send(embed=(await self.build_embed(error=True, error_type=2, channel=channel)))
                 await asyncio.sleep(5)
                 await sent.delete()
-            elif len(wish_desc) == 0:
-                sent = await channel.send(embed=(await self.build_embed(self, error=True, error_type=3)))
-                await asyncio.sleep(5)
-                await sent.delete()
             else:
-                await channel.send(embed=(await self.build_embed(self, author=wish_owner, platform=platform, description=wish_desc)))
+                for_thread = await channel.send(embed=(await self.build_embed(author=comm_owner, description=comm_desc,
+                                                                              id=comm_id, channel=channel)),
+                                                view=Buttons(self.bot))
 
-    @commands.Cog.listener()
-    async def on_message(self, ctx):
-        channel = await self.bot.fetch_channel(ctx.channel.id)
-        if os.path.isfile(f'config/{str(ctx.guild.id)}/config.json'):
-            with open(f'config/{str(ctx.guild.id)}/config.json', 'r') as f:
-                config = json.load(f)
-        try:
-            config = config['wishwall_config']
-        except KeyError:
-            sent = await channel.send(embed=(await self.build_embed(self, error=True, error_type=1)))
-            await asyncio.sleep(5)
-            await sent.delete()
-            return
-        if channel.id == config['wishwall_channel']:
-            if ctx.author == self.bot.user:
-                if 'Error' in ctx.embeds[0].title:
-                    return
-                await self.build_embed_reacts(ctx, config)
-                return
-            elif ctx.author.permissions_in(channel).manage_messages and ctx.author != self.bot.user:
-                if f'{self.prefix}wish' not in str(ctx.content)[:6]:
-                    return
-            await discord.Message.delete(ctx)
+                await for_thread.create_thread(name=comm_desc)
+                self.bot.add_view(Buttons(self.bot), message_id=for_thread.id)
+                await ctx.message.delete()
 
-    @commands.Cog.listener()
-    async def on_raw_reaction_add(self, ctx):
-        payload = ctx
-        channel = await self.bot.fetch_channel(payload.channel_id)
-        message = await channel.fetch_message(payload.message_id)
-        member = await channel.guild.fetch_member(payload.user_id)
-        if os.path.isfile(f'config/{str(ctx.guild_id)}/config.json'):
-            with open(f'config/{str(ctx.guild_id)}/config.json', 'r') as f:
-                config = json.load(f)
+
+class Buttons(discord.ui.View):
+    custom_id = 0
+    custom_id_conf = str(custom_id) + 'a'
+    custom_id_decl = str(custom_id) + 'b'
+
+    def __init__(self, bot):
+        super().__init__(timeout=None)
+        self.bot = bot
+
+    @discord.ui.button(label='Accept', style=discord.ButtonStyle.green, custom_id=str(custom_id_conf))
+    async def accept(self, button: discord.ui.Button, interaction: discord.Interaction):
+
+        channel = await self.bot.fetch_channel(channel_id=interaction.message.channel.id)
+        message = await channel.fetch_message(interaction.message.id)
+        member = await channel.guild.fetch_member(interaction.user.id)
+
+        comm_owner = message.embeds[0].footer.text
+        react_user = member.id
+        if str(react_user) not in comm_owner:
+            await message.edit(
+                embed=(await WishWall.build_embed(WishWall(self.bot), old_embed=message.embeds[0], add=member,
+                                                  channel=channel)))
+
+        # Make sure to update the message with our updated selves
         try:
-            config = config['wishwall_config']
-        except KeyError:
-            sent = await channel.send(embed=(await self.build_embed(self, error=True, error_type=1)))
-            await asyncio.sleep(5)
-            await sent.delete()
+            await interaction.response.edit_message(view=self)
+        except discord.errors.NotFound:
+            pass
+        self.custom_id += 1
+        if self.custom_id >= 10000:
+            self.custom_id = 1
+
+    @discord.ui.button(label='Decline', style=discord.ButtonStyle.red, custom_id=str(custom_id_decl))
+    async def decline(self, button: discord.ui.Button, interaction: discord.Interaction):
+
+        channel = await self.bot.fetch_channel(channel_id=interaction.channel_id)
+        message = await channel.fetch_message(interaction.message.id)
+        member = await channel.guild.fetch_member(interaction.user.id)
+
+        comm_owner = message.embeds[0].footer.text
+        react_user = member.id
+        if str(react_user) not in message.embeds[0].footer.text and member.mention not in message.embeds[0].fields[
+            0].value:
+            await interaction.response.send_message('It appears you are not in the job, or the owner of it.',
+                                                    ephemeral=True)
             return
-        if channel.id == config['wishwall_channel'] and message.author == self.bot.user and not member == self.bot.user and message.embeds[0]:
-            wish_owner = message.embeds[0].footer.text
-            react_user = member.name
-            if member.nick:
-                react_user = member.nick
-            if react_user not in wish_owner:
-                if str(payload.emoji) == config['conf_react']:
-                    await message.edit(embed=(await self.build_embed(self, old_embed=message.embeds[0], add=member)))
-                elif str(payload.emoji) == config['decl_react']:
-                    await message.edit(embed=(await self.build_embed(self, old_embed=message.embeds[0], remove=member)))
-            elif react_user in message.embeds[0].footer.text:
-                if str(payload.emoji) == config['decl_react']:
-                    await discord.Message.delete(message)
-                    return
-            await self.build_embed_reacts(message, config)
+
+        await message.edit(embed=(await WishWall.build_embed(WishWall(self.bot), old_embed=message.embeds[0],
+                                                             remove=member, channel=channel)))
+        if str(react_user) in message.embeds[0].footer.text:
+            await discord.Message.delete(message)
+            return
+
+        # Make sure to update the message with our updated selves
+        try:
+            await interaction.response.edit_message(view=self)
+        except discord.errors.NotFound:
+            pass
+        self.custom_id += 1
+        if self.custom_id >= 10000:
+            self.custom_id = 1
 
 
 def setup(bot):
