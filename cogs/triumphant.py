@@ -43,7 +43,7 @@ class Triumphant(commands.Cog, name='Triumphant'):
         if str(payload.emoji) not in config['triumphant_config']['triumph_react']:
             return
         self.server_db = self.db[str(payload.guild_id)]['users']
-        guild = await self.bot.fetch_guild(payload.guild_id)
+        guild = self.bot.get_guild(payload.guild_id)
         channel = await self.bot.fetch_channel(payload.channel_id)
         msg = await channel.fetch_message(payload.message_id)
         not_bot_user = None
@@ -60,20 +60,25 @@ class Triumphant(commands.Cog, name='Triumphant'):
         if msg.embeds:
             copy_embed = msg.embeds[0].to_dict()
             for member in guild.members:
-                if member.name in msg.embeds[0].description:
+                if member.bot:
+                    continue
+                if member.name.lower() in copy_embed['description'].lower() or \
+                        member.display_name.lower() in copy_embed['description'].lower():
                     not_bot_user = member.id
                     break
-                else:
-                    user = self.server_db.find()
-                    for _, user_data in enumerate(user):
-                        for platform in self.sys_aliases:
-                            username = user_data['profile']['aliases'][platform]
-                            if username is not None:
-                                if username in msg.embeds[0].description and user_data['_id'] not in results:
-                                    count += 1
-                                    not_bot_user = member.id
-                                    break
+
+            user = self.server_db.find()
+            for _, user_data in enumerate(user):
+                for platform in self.sys_aliases:
+                    username = user_data['profile']['aliases'][platform]
+                    if username is not None:
+                        if username.lower() in copy_embed['description'].lower() and user_data['_id'] not in results:
+                            results.append(user_data['_id'])
+                            not_bot_user = int(user_data['_id'])
+                            break
+                if user_data['_id'] in results:
                     break
+
             copy_embed = msg.embeds[0].to_dict()
             if msg.content:
                 try:
@@ -99,7 +104,6 @@ class Triumphant(commands.Cog, name='Triumphant'):
                         continue
         else:
             content = msg.content
-        print(msg.mentions)
         if msg.mentions:
             for member in msg.mentions:
                 id_list.append(str(member.id))
@@ -270,8 +274,6 @@ class Triumphant(commands.Cog, name='Triumphant'):
                 chan = self.bot.get_channel(int(config['triumphant_config']["triumph_channel"]))
 
                 await chan.send(embed=reset_embed)
-
-
 
 def setup(bot):
     bot.add_cog(Triumphant(bot))

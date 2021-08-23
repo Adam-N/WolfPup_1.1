@@ -16,13 +16,29 @@ class LFGCog(commands.Cog, name='lfg'):
     def cog_unload(self):
         self.lfg_message.cancel()
 
+    @commands.command()
+    @commands.is_owner()
+    async def lfg_config(self, ctx):
+        lfg_config = {
+            'pc_lfg': ctx.channel.id,
+            'ps_lfg': ctx.channel.id,
+            'xb_lfg': ctx.channel.id,
+            'ffxiv_lfg': ctx.channel.id
+        }
+        if os.path.isfile(f'config/{ctx.guild.id}/config.json'):
+            with open(f'config/{ctx.guild.id}/config.json', 'r') as f:
+                config = json.load(f)
+        config['lfg_config'] = lfg_config
+        with open(f'config/{ctx.guild.id}/config.json', 'w') as f:
+            json.dump(config, f, indent=2)
+        await ctx.send(embed=discord.Embed(title=f'LFG config initialized'))
+
     @tasks.loop(minutes=30)
     async def lfg_message(self):
         guild = self.bot.get_guild(334925467431862272)
         if os.path.isfile(f'config/{guild.id}/config.json'):
             with open(f'config/{guild.id}/config.json', 'r') as f:
                 config = json.load(f)
-
 
             for lfg in config["lfg_config"]:
                 channel = self.bot.get_channel(int(config["lfg_config"][lfg]))

@@ -5,7 +5,6 @@ import discord
 from discord.ext import commands
 from time import time
 import datetime as dt
-from lib.util import Util
 from lib.mongo import Mongo
 from cogs.level import Level
 from cogs.profile import Profile

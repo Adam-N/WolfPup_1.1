@@ -146,7 +146,10 @@ class Mod(commands.Cog):
                 embed.add_field(name='Channel:', value=edited_channel.mention)
                 embed.add_field(name='User:', value=edited_message.author.mention)
                 embed.add_field(name='Message Before:', value=payload.cached_message.content)
-                embed.add_field(name='Message After:', value=data['content'])
+                try:
+                    embed.add_field(name='Message After:', value=data['content'])
+                except KeyError:
+                    pass
                 embed.set_footer(text=f'User ID: {edited_message.author.id}')
                 embed.set_thumbnail(url=edited_message.author.avatar.url)
                 await modlog_channel.send(embed=embed)

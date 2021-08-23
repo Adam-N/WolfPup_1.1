@@ -6,6 +6,7 @@ import traceback
 from math import sqrt, floor
 import datetime as dt
 import discord
+import pytz
 from discord import Forbidden
 from discord.ext import commands
 from lib.util import Util
@@ -108,14 +109,7 @@ class Level(commands.Cog, name='Level'):
                         await asyncio.sleep(5)
                         await pending.delete()
             except Exception as e:
-                with open(f'config/{ctx.guild.id}/config.json', 'r') as f:
-                    config = json.load(f)
-                config_channel = self.bot.get_channel(int(config['channel_config']['config_channel']))
-                await config_channel.send("Adam. Ya done fucked up.\n"
-                                          f"{e}\n"
-                                          f"{e.args}\n"
-                                          f"{type(e)}")
-                traceback.print_exc()
+                raise KeyError(f"{e}, something went wrong with Daily")
 
     @commands.command(name='add_experience', hidden=True, pass_context=True, aliases=['xp'])
     @commands.has_guild_permissions(administrator=True)
@@ -325,17 +319,15 @@ class Level(commands.Cog, name='Level'):
             user = self.server_db.find_one({'_id': str(message.author.id)})
 
             try:
-                if (user['timestamp'] + dt.timedelta(seconds=45)) <= discord.utils.utcnow():
+                if (user['timestamp'].astimezone(pytz.timezone("UTC")) + dt.timedelta(seconds=45)) <= discord.utils.utcnow():
                     self.server_db.update_one({'_id': str(message.author.id)}, {'$set':
                                                                                     {'timestamp': discord.utils.utcnow()}})
                     await self.update_experience(message.guild.id, message.author.id)
             except KeyError:
-                pass
+                self.server_db.update_one({'_id': str(message.author.id)}, {'$set':
+                                                                                {'timestamp': discord.utils.utcnow()}})
             except TypeError:
-                with open(f'config/{message.guild.id}/config.json', 'r') as f:
-                    config = json.load(f)
-                config_channel = self.bot.get_channel(int(config['channel_config']['config_channel']))
-                config_channel.send(f"Error:{type(user['timestamp'])}, Value:{user['timestamp']}")
+                raise TypeError('Problem with the timezones in level.py')
 
 
     @commands.command()

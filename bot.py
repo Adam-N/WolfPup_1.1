@@ -12,7 +12,7 @@ from lib.mongo import Mongo
 from cogs.level import Level
 from cogs.triumphant import Triumphant
 from cogs.mod import Mod
-from cogs.buttons import Buttons
+from cogs.wish import Buttons
 
 
 def get_prefix(bot, message):
@@ -27,8 +27,8 @@ def get_prefix(bot, message):
 
 initial_cogs = ['master', 'cogs.mod', 'cogs.welcome',
                 'cogs.level', 'cogs.profile', 'cogs.thank', 'cogs.leaderboard', 'cogs.friend',
-                'cogs.games', 'cogs.roles', 'cogs.starboard', 'cogs.timer', 'cogs.triumphant'
-    , 'cogs.wish']
+                'cogs.games', 'cogs.roles', 'cogs.starboard', 'cogs.timer', 'cogs.triumphant', 'cogs.wish']
+
 intents = discord.Intents.default()
 intents.members = True
 intents.messages = True
@@ -135,7 +135,7 @@ async def monthly():
             await Level.remove_levels_monthly(Level(bot), config_channel.guild)
             await config_channel.send(embed=discord.Embed(title=f'{config_channel.guild.name} Monthly Reset!'))
 
-'''@bot.event
+@bot.event
 async def on_error(event, *args, **kwargs):
     config_channel = None
     if os.path.isfile('config/334925467431862272/config.json'):
@@ -146,10 +146,12 @@ async def on_error(event, *args, **kwargs):
         return
     new_embed = discord.Embed(title=f'**[Error]** {type(event).__name__} **[Error]**')
     new_embed.add_field(name='Event', value=event)
-    new_embed.description = '```py\n%s\n```' % traceback.format_exc()
+    traceback_text = '```py\n%s\n```' % traceback.format_exc()
+    if traceback_text.len() > 600:
+        traceback_text = traceback_text[0:600]
+    new_embed.description = traceback_text
     new_embed.add_field(name="Args", value=f"{args}")
-    if kwargs:
-        new_embed.add_field(name="Kwargs", value=f"{kwargs}")
+
     await config_channel.send(embed=new_embed)
 
 
@@ -176,7 +178,7 @@ async def on_command_error(event, *args, **kwargs):
     if kwargs:
         new_embed.add_field(name="Arguments", value=f"{kwargs}")
     await config_channel.send(embed=new_embed, delete_after=10)
-'''
+
 
 async def change_presence():
     game = discord.Game(";help for more information")

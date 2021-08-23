@@ -40,8 +40,6 @@ class Starboard(commands.Cog, name='Starboard'):
             channel = self.bot.get_channel(payload.channel_id)
             starboard_channel = self.bot.get_channel(config['starboard_config']['starboard_channel'])
             message = await channel.fetch_message(payload.message_id)
-            print(message.attachments)
-            print(message.content)
             for react in message.reactions:
                 if react.emoji == config['starboard_config']['star_react']:
                     list = await react.users().flatten()
@@ -120,7 +118,6 @@ class Starboard(commands.Cog, name='Starboard'):
                             react = config['starboard_config']['starred_react']
                         await message.add_reaction(react)
         except KeyError:
-            print('Starboard Settings not Initialized. Skipping reaction check.')
             raise KeyError('Starboard settings not initialised')
 
 

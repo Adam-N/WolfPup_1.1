@@ -151,57 +151,64 @@ class Buttons(discord.ui.View):
 
     @discord.ui.button(label='Accept', style=discord.ButtonStyle.green, custom_id=str(custom_id_conf))
     async def accept(self, button: discord.ui.Button, interaction: discord.Interaction):
-
-        channel = await self.bot.fetch_channel(channel_id=interaction.message.channel.id)
-        message = await channel.fetch_message(interaction.message.id)
-        member = await channel.guild.fetch_member(interaction.user.id)
-
-        comm_owner = message.embeds[0].footer.text
-        react_user = member.id
-        if str(react_user) not in comm_owner:
-            await message.edit(
-                embed=(await WishWall.build_embed(WishWall(self.bot), old_embed=message.embeds[0], add=member,
-                                                  channel=channel)))
-
-        # Make sure to update the message with our updated selves
         try:
-            await interaction.response.edit_message(view=self)
-        except discord.errors.NotFound:
+            channel = await self.bot.fetch_channel(channel_id=interaction.message.channel.id)
+            message = await channel.fetch_message(interaction.message.id)
+            member = await channel.guild.fetch_member(interaction.user.id)
+
+            comm_owner = message.embeds[0].footer.text
+            react_user = member.id
+            if str(react_user) not in comm_owner:
+                await message.edit(
+                    embed=(await WishWall.build_embed(WishWall(self.bot), old_embed=message.embeds[0], add=member,
+                                                      channel=channel)))
+            elif str(react_user) in comm_owner:
+                await interaction.response.send_message('You are the owner of this job. You cannot join it',
+                                                        ephemeral=True)
+
+            # Make sure to update the message with our updated selves
+            try:
+                await interaction.response.edit_message(view=self)
+            except discord.errors.NotFound:
+                pass
+            self.custom_id += 1
+            if self.custom_id >= 10000:
+                self.custom_id = 1
+        except discord.errors.InteractionResponded:
             pass
-        self.custom_id += 1
-        if self.custom_id >= 10000:
-            self.custom_id = 1
 
     @discord.ui.button(label='Decline', style=discord.ButtonStyle.red, custom_id=str(custom_id_decl))
     async def decline(self, button: discord.ui.Button, interaction: discord.Interaction):
-
-        channel = await self.bot.fetch_channel(channel_id=interaction.channel_id)
-        message = await channel.fetch_message(interaction.message.id)
-        member = await channel.guild.fetch_member(interaction.user.id)
-
-        comm_owner = message.embeds[0].footer.text
-        react_user = member.id
-        if str(react_user) not in message.embeds[0].footer.text and member.mention not in message.embeds[0].fields[
-            0].value:
-            await interaction.response.send_message('It appears you are not in the job, or the owner of it.',
-                                                    ephemeral=True)
-            return
-
-        await message.edit(embed=(await WishWall.build_embed(WishWall(self.bot), old_embed=message.embeds[0],
-                                                             remove=member, channel=channel)))
-        if str(react_user) in message.embeds[0].footer.text:
-            await discord.Message.delete(message)
-            return
-
-        # Make sure to update the message with our updated selves
         try:
-            await interaction.response.edit_message(view=self)
-        except discord.errors.NotFound:
-            pass
-        self.custom_id += 1
-        if self.custom_id >= 10000:
-            self.custom_id = 1
+            channel = await self.bot.fetch_channel(channel_id=interaction.channel_id)
+            message = await channel.fetch_message(interaction.message.id)
+            member = await channel.guild.fetch_member(interaction.user.id)
 
+            comm_owner = message.embeds[0].footer.text
+            react_user = member.id
+            if str(react_user) not in message.embeds[0].footer.text and member.mention not in message.embeds[0].fields[
+                0].value:
+                await interaction.response.send_message('It appears you are not participating in the job, or the owner of '
+                                                        'it. So you cannot delete or remove yourself from the job.',
+                                                        ephemeral=True)
+                return
+
+            await message.edit(embed=(await WishWall.build_embed(WishWall(self.bot), old_embed=message.embeds[0],
+                                                                 remove=member, channel=channel)))
+            if str(react_user) in message.embeds[0].footer.text:
+                await discord.Message.delete(message)
+                return
+
+            # Make sure to update the message with our updated selves
+            try:
+                await interaction.response.edit_message(view=self)
+            except discord.errors.NotFound:
+                pass
+            self.custom_id += 1
+            if self.custom_id >= 10000:
+                self.custom_id = 1
+        except discord.errors.InteractionResponded:
+            pass
 
 def setup(bot):
     bot.add_cog(WishWall(bot))

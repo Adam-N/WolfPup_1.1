@@ -6,6 +6,8 @@ from discord.ext import commands
 from lib.util import Util
 from lib.mongo import Mongo
 from PIL import Image, ImageDraw, ImageFont
+import requests
+
 
 
 class Profile(commands.Cog):
@@ -166,11 +168,7 @@ class Profile(commands.Cog):
                     # # Avatar Draw # #
                     avatar_img = Image.open('assets/gigi_avatar.png')
                     if member.avatar:
-                        avatar_asset = member.avatar.url_as(format='png', size=128)
-                        buffer_img = io.BytesIO()
-                        await avatar_asset.save(buffer_img)
-                        buffer_img.seek(0)
-                        avatar_img = Image.open(buffer_img).resize((128, 128)).convert('RGBA')
+                        avatar_img = Image.open(requests.get(member.avatar.url, stream=True).raw).resize((128, 128)).convert('RGBA')
                     emblem_img = Image.open(f'assets/emblem_{user["level"]}.png').convert('RGBA')
                     draw.rectangle((ref_coord[0]-5, ref_coord[1]-5,
                                     ref_coord[0]+avatar_img.width+5, ref_coord[1]+avatar_img.height+5),
