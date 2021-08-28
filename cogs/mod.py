@@ -24,9 +24,10 @@ class Mod(commands.Cog):
         if await Util.check_channel(ctx, True):
             if member is None:
                 member = ctx.author
-            await ctx.send(f'{member.display_name} joined at {dt.datetime.strftime(member.joined_at, "%H:%M %b %dth %Y")}.'
-                           f' That\'s {Util.deltaconv(int((discord.utils.utcnow()-member.joined_at).total_seconds()))}'
-                           f' ago!')
+            await ctx.send(
+                f'{member.display_name} joined at {dt.datetime.strftime(member.joined_at, "%H:%M %b %dth %Y")}.'
+                f' That\'s {Util.deltaconv(int((discord.utils.utcnow() - member.joined_at).total_seconds()))}'
+                f' ago!')
 
     @commands.command(name='top_role', aliases=['toprole'])
     @commands.guild_only()
@@ -59,7 +60,7 @@ class Mod(commands.Cog):
                 member = ctx.author
             embed = discord.Embed(title=f"{member.name}'s Profile", description="Check this out")
             embed.add_field(name="Joined:",
-                            value=f"{Util.deltaconv(int((discord.utils.utcnow()-member.joined_at).total_seconds()))} ago")
+                            value=f"{Util.deltaconv(int((discord.utils.utcnow() - member.joined_at).total_seconds()))} ago")
             embed.add_field(name="Created on", value=f"{dt.datetime.strftime(member.created_at, '%d %B, %Y  %H:%M')}")
             embed.add_field(name="Username", value=f"{member.name}{member.discriminator}")
             embed.add_field(name="Top role:", value=f"{member.top_role}")
@@ -115,12 +116,15 @@ class Mod(commands.Cog):
             embed = discord.Embed(title='Message Deleted')
             embed.add_field(name='Message Author:', value=message.author.mention)
             embed.add_field(name='Channel:', value=message.channel.mention)
-            embed.add_field(name='Message Content:', value=message.content)
+            if len(message.content > 1000):
+                msg = message.content
+                msg = msg[0:1000]
+                embed.add_field(name='Message Content:', value=msg)
+            else:
+                embed.add_field(name='Message Content:', value=message.content)
             embed.set_footer(text=f'Author ID: {message.author.id} | Message ID: {message.id}')
             embed.set_thumbnail(url=message.author.avatar.url)
             await modlog_channel.send(embed=embed)
-
-
 
     @commands.Cog.listener()
     async def on_raw_message_edit(self, payload):
@@ -142,7 +146,8 @@ class Mod(commands.Cog):
                 await modlog_channel.send(embed=embed)
                 return
             if payload.cached_message:
-                embed = discord.Embed(title='Message Edited', description=f'[Jump to message]({edited_message.jump_url})')
+                embed = discord.Embed(title='Message Edited',
+                                      description=f'[Jump to message]({edited_message.jump_url})')
                 embed.add_field(name='Channel:', value=edited_channel.mention)
                 embed.add_field(name='User:', value=edited_message.author.mention)
                 embed.add_field(name='Message Before:', value=payload.cached_message.content)
@@ -225,6 +230,9 @@ class Mod(commands.Cog):
                     new_embed.add_field(name='Most Thankful!', value=f'{winners[2]}')
                     break
             await channel.send(embed=new_embed)
+
+
+
 
 def setup(bot):
     bot.add_cog(Mod(bot))

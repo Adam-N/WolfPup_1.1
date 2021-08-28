@@ -2,6 +2,7 @@ import json
 import os
 import datetime as dt
 import discord
+import pytz
 from discord.ext import tasks, commands
 from discord.errors import NotFound
 
@@ -20,10 +21,9 @@ class LFGCog(commands.Cog, name='lfg'):
     @commands.is_owner()
     async def lfg_config(self, ctx):
         lfg_config = {
-            'pc_lfg': ctx.channel.id,
-            'ps_lfg': ctx.channel.id,
-            'xb_lfg': ctx.channel.id,
-            'ffxiv_lfg': ctx.channel.id
+            'dtg_lfg': ctx.channel.id,
+            'ffxiv_lfg': ctx.channel.id,
+            'pickup_lfg': ctx.channel.id
         }
         if os.path.isfile(f'config/{ctx.guild.id}/config.json'):
             with open(f'config/{ctx.guild.id}/config.json', 'r') as f:
@@ -55,7 +55,7 @@ class LFGCog(commands.Cog, name='lfg'):
                             continue
                 if last_message.author.bot:
                     continue
-                if last_message.created_at + dt.timedelta(minutes=90) <= dt.datetime.utcnow():
+                if last_message.created_at + dt.timedelta(minutes=90) <= discord.utils.utcnow():
 
                     embed = discord.Embed(title="**Welcome to the LFG Channel!**",
                                           description="Here's a few tips to help you get the most out of this "

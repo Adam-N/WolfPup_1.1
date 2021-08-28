@@ -48,12 +48,12 @@ class Util:
 
         elif bot_exclusive is not None:
             if ctx.channel.type is discord.ChannelType.text:
-                if ctx.channel.id not in config['channel_config']['bot_channels']:
+                if ctx.channel.id in config['channel_config']['bot_channels']:
                     await ctx.send(embed=discord.Embed(title='This command is __NOT__ available in bot channels!'))
                     return False
             elif ctx.channel.type is discord.ChannelType.private_thread or \
                     ctx.channel.type is discord.ChannelType.public_thread:
-                if ctx.channel.parent_id not in config['channel_config']['bot_channels']:
+                if ctx.channel.parent_id in config['channel_config']['bot_channels']:
                     await ctx.send(embed=discord.Embed(title='This command is __NOT__ available in bot channels!'))
                     return False
         return True

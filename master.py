@@ -75,14 +75,17 @@ class Master(commands.Cog, name='Master'):
             try:
                 value = await commands.TextChannelConverter().convert(ctx, value)
                 value = value.id
-            except (TypeError, commands.errors.ChannelNotFound): pass
+            except (TypeError, commands.errors.ChannelNotFound):
+                pass
             try:
                 value = await commands.RoleConverter().convert(ctx, value)
                 value = value.id
-            except (TypeError, commands.errors.RoleNotFound): pass
+            except (TypeError, commands.errors.RoleNotFound):
+                pass
             try:
                 value = await commands.EmojiConverter().convert(ctx, value)
-            except (TypeError, commands.errors.EmojiNotFound): pass
+            except (TypeError, commands.errors.EmojiNotFound):
+                pass
             try:
                 if value.isdigit():
                     value = int(value)
@@ -115,15 +118,18 @@ class Master(commands.Cog, name='Master'):
                 arg = arg.lower()
                 joined_status = " ".join(status)
                 if arg not in ['playing', 'listening', 'watching']:
-                    await ctx.send('Only playing, streaming, listening or watching allowed as activities.', delete_after=5)
+                    await ctx.send('Only playing, streaming, listening or watching allowed as activities.',
+                                   delete_after=5)
                     await ctx.message.delete()
                     return
                 if arg == 'playing':
                     await self.bot.change_presence(activity=discord.Game(name=joined_status))
                 if arg == 'listening':
-                    await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=joined_status))
+                    await self.bot.change_presence(
+                        activity=discord.Activity(type=discord.ActivityType.listening, name=joined_status))
                 if arg == 'watching':
-                    await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=joined_status))
+                    await self.bot.change_presence(
+                        activity=discord.Activity(type=discord.ActivityType.watching, name=joined_status))
                 await ctx.send(f'status changed to {arg} {joined_status}')
 
     @commands.command(name='load', hidden=True)
@@ -203,7 +209,8 @@ class Master(commands.Cog, name='Master'):
                         await pending.edit(embed=discord.Embed(title='Server Rebuild Complete',
                                                                description=f'Server ID: {str(ctx.guild.id)}'))
                     else:
-                        await pending.edit(embed=discord.Embed(title='User Rebuild Complete',description=f'User ID: {str(member.id)}'))
+                        await pending.edit(embed=discord.Embed(title='User Rebuild Complete',
+                                                               description=f'User ID: {str(member.id)}'))
                     return
             except:
                 if ctx.channel.id == config['channel_config']['config_channel']:

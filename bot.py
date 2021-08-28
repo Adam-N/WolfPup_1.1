@@ -27,7 +27,8 @@ def get_prefix(bot, message):
 
 initial_cogs = ['master', 'cogs.mod', 'cogs.welcome',
                 'cogs.level', 'cogs.profile', 'cogs.thank', 'cogs.leaderboard', 'cogs.friend',
-                'cogs.games', 'cogs.roles', 'cogs.starboard', 'cogs.timer', 'cogs.triumphant', 'cogs.wish']
+                'cogs.games', 'cogs.roles', 'cogs.starboard', 'cogs.timer', 'cogs.triumphant', 'cogs.wish',
+                'cogs.lfg']
 
 intents = discord.Intents.default()
 intents.members = True
@@ -147,7 +148,7 @@ async def on_error(event, *args, **kwargs):
     new_embed = discord.Embed(title=f'**[Error]** {type(event).__name__} **[Error]**')
     new_embed.add_field(name='Event', value=event)
     traceback_text = '```py\n%s\n```' % traceback.format_exc()
-    if traceback_text.len() > 600:
+    if len(traceback_text) > 600:
         traceback_text = traceback_text[0:600]
     new_embed.description = traceback_text
     new_embed.add_field(name="Args", value=f"{args}")
@@ -177,7 +178,7 @@ async def on_command_error(event, *args, **kwargs):
 
     if kwargs:
         new_embed.add_field(name="Arguments", value=f"{kwargs}")
-    await config_channel.send(embed=new_embed, delete_after=10)
+    await config_channel.send(embed=new_embed)
 
 
 async def change_presence():

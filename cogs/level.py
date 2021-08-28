@@ -44,16 +44,15 @@ class Level(commands.Cog, name='Level'):
     async def remove_levels_monthly(self, guild: discord.guild):
         with open(f'config/{guild.id}/config.json', 'r') as f:
             config = json.load(f)
-        roles_check= [guild.get_role(config['role_config']['level_2']),
-                guild.get_role(config['role_config']['level_3']),
-                guild.get_role(config['role_config']['level_4']),
-                guild.get_role(config['role_config']['level_5'])]
+        roles_check = [guild.get_role(config['role_config']['level_2']),
+                       guild.get_role(config['role_config']['level_3']),
+                       guild.get_role(config['role_config']['level_4']),
+                       guild.get_role(config['role_config']['level_5'])]
 
         for user in guild.users:
             for role in user.roles:
                 if role in roles_check:
                     await user.remove_roles(role)
-
 
     @commands.command(name='stats', pass_context=True)
     async def stats(self, ctx, member: discord.Member = None):
@@ -79,14 +78,16 @@ class Level(commands.Cog, name='Level'):
                         streak = user['exp_streak']
                         new_embed = discord.Embed(title='You\'ve claimed your daily bonus!',
                                                   color=discord.Colour.gold())
-                        new_embed.set_thumbnail(url='https://cdn.discordapp.com/attachments/532380077896237061/800924153053970476'
-                                                    '/terry_coin.png')
+                        new_embed.set_thumbnail(
+                            url='https://cdn.discordapp.com/attachments/532380077896237061/800924153053970476'
+                                '/terry_coin.png')
                         if member != ctx.author:
                             new_embed.title = 'You\'ve given your bonus to your friend!'
                         try:
-                            if (user['flags']['daily_stamp'] + dt.timedelta(hours=36)) < discord.utils.utcnow():
+                            if (user['flags']['daily_stamp'].astimezone(tz=pytz.timezone("UTC")) + dt.timedelta(hours=36)) < discord.utils.utcnow():
                                 new_embed.description = f'This is day {streak}. You missed your streak window...'
-                                self.server_db.find_one_and_update({'_id': str(ctx.author.id)}, {'$set': {'exp_streak': 0}})
+                                self.server_db.find_one_and_update({'_id': str(ctx.author.id)},
+                                                                   {'$set': {'exp_streak': 0}})
                                 streak -= 1
                                 broken_streak = True
                         except:
@@ -94,18 +95,22 @@ class Level(commands.Cog, name='Level'):
                         if not broken_streak:
                             if streak >= 5:
                                 new_embed.description = '__BONUS__ This is your 5-day streak! __BONUS__'
-                                self.server_db.find_one_and_update({'_id': str(ctx.author.id)}, {'$set': {'exp_streak': 0}})
+                                self.server_db.find_one_and_update({'_id': str(ctx.author.id)},
+                                                                   {'$set': {'exp_streak': 0}})
                                 streak = 10
                             else:
                                 new_embed.description = f'This is day {streak}. Keep it up to day 5!'
-                        self.server_db.find_one_and_update({'_id': str(ctx.author.id)}, {'$set': {'flags.daily': False}})
-                        self.server_db.find_one_and_update({'_id': str(ctx.author.id)}, {'$set': {'flags.daily_stamp': discord.utils.utcnow()}})
-                        daily_exp = int(random.randint(150, 250)*(1+(0.15*streak)))
+                        self.server_db.find_one_and_update({'_id': str(ctx.author.id)},
+                                                           {'$set': {'flags.daily': False}})
+                        self.server_db.find_one_and_update({'_id': str(ctx.author.id)},
+                                                           {'$set': {'flags.daily_stamp': discord.utils.utcnow()}})
+                        daily_exp = int(random.randint(150, 250) * (1 + (0.15 * streak)))
                         await self.update_experience(ctx.guild.id, member.id, daily_exp)
                         await ctx.send(embed=new_embed)
                     else:
                         await ctx.message.delete()
-                        pending = await ctx.send(embed=discord.Embed(title='You\'ve already claimed your daily bonus today!'))
+                        pending = await ctx.send(
+                            embed=discord.Embed(title='You\'ve already claimed your daily bonus today!'))
                         await asyncio.sleep(5)
                         await pending.delete()
             except Exception as e:
@@ -145,15 +150,16 @@ class Level(commands.Cog, name='Level'):
         member = await guild.fetch_member(int(user_id))
         user = self.server_db.find_one_and_update({'_id': str(user_id)}, {'$inc': {'exp': amount}},
                                                   return_document=ReturnDocument.AFTER)
-        user = self.server_db.find_one_and_update({'_id': str(user_id)}, {'$set': {'level': self.update_level(user['exp'])}},
+        user = self.server_db.find_one_and_update({'_id': str(user_id)},
+                                                  {'$set': {'level': self.update_level(user['exp'])}},
                                                   return_document=ReturnDocument.AFTER)
         try:
             if guild.get_role(config['role_config'][f'level_{user["level"]}']) not in member.roles:
                 await member.add_roles(guild.get_role(config['role_config'][f'level_{user["level"]}']))
 
-                for x in range(1,4):
-                    if guild.get_role(config['role_config'][f'level_{x+1}']) in member.roles:
-                        await member.remove_roles(guild.get_role(config['role_config'][f'level_{x+1}']))
+                for x in range(1, 4):
+                    if guild.get_role(config['role_config'][f'level_{x + 1}']) in member.roles:
+                        await member.remove_roles(guild.get_role(config['role_config'][f'level_{x + 1}']))
         except KeyError:
             pass
             if 1 < user["level"] <= 5:
@@ -218,7 +224,7 @@ class Level(commands.Cog, name='Level'):
                 continue
         await config_channel.send("Complete")
 
-    @commands.command(name='build_bday', hidden=True, aliases = ['rebuild_bday'])
+    @commands.command(name='build_bday', hidden=True, aliases=['rebuild_bday'])
     @commands.is_owner()
     async def build_bday(self, ctx, member: discord.Member = None, pending=None):
 
@@ -287,7 +293,8 @@ class Level(commands.Cog, name='Level'):
         await channel.send(embed=birthday_embed)
 
         await member.add_roles(birthday_role)
-        self.server_db.find_one_and_update({'_id': str(member.id)}, {'$set': {'bday.timestamp': discord.utils.utcnow()}})
+        self.server_db.find_one_and_update({'_id': str(member.id)},
+                                           {'$set': {'bday.timestamp': discord.utils.utcnow()}})
 
     @staticmethod
     async def daily_bday_reset(self, guild):
@@ -318,19 +325,19 @@ class Level(commands.Cog, name='Level'):
             self.server_db = self.db[str(message.guild.id)]['users']
             user = self.server_db.find_one({'_id': str(message.author.id)})
 
-            try:
-                if (user['timestamp'].astimezone(pytz.timezone("UTC")) + dt.timedelta(seconds=45)) <= discord.utils.utcnow():
-                    self.server_db.update_one({'_id': str(message.author.id)}, {'$set':
-                                                                                    {'timestamp': discord.utils.utcnow()}})
-                    await self.update_experience(message.guild.id, message.author.id)
-            except KeyError:
+            # try:
+            if (user['timestamp'].astimezone(tz=pytz.timezone("UTC")) + dt.timedelta(
+                    seconds=45)) <= discord.utils.utcnow():
+                self.server_db.update_one({'_id': str(message.author.id)}, {'$set':
+                                                                                {'timestamp': discord.utils.utcnow()}})
+                await self.update_experience(message.guild.id, message.author.id)
+            '''except KeyError:
                 self.server_db.update_one({'_id': str(message.author.id)}, {'$set':
                                                                                 {'timestamp': discord.utils.utcnow()}})
             except TypeError:
-                raise TypeError('Problem with the timezones in level.py')
+                raise TypeError('Problem with the timezones in level.py')'''
 
-
-    @commands.command()
+    @commands.command(hidden=True)
     @commands.is_owner()
     async def manual_daily_reset(self, ctx):
         self.server_db = self.db[str(ctx.guild.id)]['users']

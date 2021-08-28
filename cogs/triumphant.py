@@ -66,18 +66,21 @@ class Triumphant(commands.Cog, name='Triumphant'):
                         member.display_name.lower() in copy_embed['description'].lower():
                     not_bot_user = member.id
                     break
-
-            user = self.server_db.find()
-            for _, user_data in enumerate(user):
-                for platform in self.sys_aliases:
-                    username = user_data['profile']['aliases'][platform]
-                    if username is not None:
-                        if username.lower() in copy_embed['description'].lower() and user_data['_id'] not in results:
-                            results.append(user_data['_id'])
-                            not_bot_user = int(user_data['_id'])
-                            break
-                if user_data['_id'] in results:
-                    break
+            if not not_bot_user:
+                user = self.server_db.find()
+                for _, user_data in enumerate(user):
+                    for platform in self.sys_aliases:
+                        username = user_data['profile']['aliases'][platform]
+                        if username is not None:
+                            try:
+                                if username.lower() in copy_embed['description'].lower() and user_data['_id'] not in results:
+                                    results.append(user_data['_id'])
+                                    not_bot_user = int(user_data['_id'])
+                                    break
+                            except KeyError:
+                                break
+                    if user_data['_id'] in results:
+                        break
 
             copy_embed = msg.embeds[0].to_dict()
             if msg.content:
@@ -247,7 +250,7 @@ class Triumphant(commands.Cog, name='Triumphant'):
         triumph_embed.add_field(name="Users:", value=f"{member_list}")
         await ctx.send(embed=triumph_embed)
 
-    @commands.command()
+    @commands.command(hidden=True)
     @commands.is_owner()
     async def manual_reset(self, ctx):
         async with ctx.channel.typing():

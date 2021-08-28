@@ -1,5 +1,8 @@
 import io
 import asyncio
+import json
+import os
+
 import discord
 from discord import File
 from discord.ext import commands
@@ -9,16 +12,14 @@ from PIL import Image, ImageDraw, ImageFont
 import requests
 
 
-
 class Profile(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.db = Mongo.init_db(Mongo())
         self.server_db = None
         self.sys_aliases = {'ps': {'ps', 'psn', 'ps4', 'ps5', 'playstation'},
-                            'xb': {'xb', 'xb1', 'xbox', 'microsoft'},
                             'steam': {'steam', 'steam64', 'valve'},
-                            'ubi': {'uplay', 'ubi', 'ubisoft'},
+                            'dtg': {'destiny', 'bungie', 'Bungie', 'destiny2'},
                             'xiv': {'ffxiv', 'xiv', 'ff'}}
 
     @commands.command(name='build_profile', hidden=True, aliases=['rebuild_profile'])
@@ -31,8 +32,8 @@ class Profile(commands.Cog):
             pending = await ctx.send(embed=discord.Embed(title='Rebuilding Profile stats...'))
         if await Util.check_channel(ctx, True):
             new_profile = {'profile': {'aliases': {
-                           'ps': None, 'xb': None, 'ubi': None, 'steam': None, 'xiv': None},
-                           'wanted_text': None}}
+                'ps': None, 'steam': None, 'xiv': None, 'dtg': None},
+                'wanted_text': None}}
             if member:
                 self.server_db.find_one_and_update({'_id': str(member.id)}, {'$set': new_profile}, upsert=True)
                 return
@@ -52,7 +53,8 @@ class Profile(commands.Cog):
             for platform in self.sys_aliases:
                 if system.lower() in self.sys_aliases[platform]:
                     if len(username) > 32:
-                        await ctx.send(embed=discord.Embed(title='**[Error]** : Usernames must be 32 characters or less'))
+                        await ctx.send(
+                            embed=discord.Embed(title='**[Error]** : Usernames must be 32 characters or less'))
                     self.server_db.find_one_and_update({'_id': str(ctx.author.id)},
                                                        {'$set': {f'profile.aliases.{platform}': username}})
                     await ctx.send(embed=discord.Embed(title='Successfully Updated Profile',
@@ -148,99 +150,106 @@ class Profile(commands.Cog):
                     text_font = ImageFont.truetype('assets/font/HELLDORA.TTF', size=22)
                     alias_font = ImageFont.truetype('assets/font/libel_suit.ttf', size=20)
                     buffer = 20
-                    draw_bounds = [buffer, (ref_img.width-buffer), buffer, (ref_img.height-buffer)]
+                    draw_bounds = [buffer, (ref_img.width - buffer), buffer, (ref_img.height - buffer)]
                     ref_coord = [draw_bounds[0], draw_bounds[2]]
                     # # Title Draw # #
                     text_size = draw.textsize(text='WANTED', font=title_font)
-                    draw.text((int((ref_img.width/2)-(text_size[0]/2)), ref_coord[1]),
+                    draw.text((int((ref_img.width / 2) - (text_size[0] / 2)), ref_coord[1]),
                               text='WANTED', fill=(16, 16, 16), font=title_font)
-                    draw.line((ref_coord[0], ref_coord[1]+int(text_size[1]/2),
-                               int(ref_img.width/2)-int(text_size[0]/2+int(buffer/2)), ref_coord[1]+int(text_size[1]/2)),
+                    draw.line((ref_coord[0], ref_coord[1] + int(text_size[1] / 2),
+                               int(ref_img.width / 2) - int(text_size[0] / 2 + int(buffer / 2)),
+                               ref_coord[1] + int(text_size[1] / 2)),
                               fill=(16, 16, 16), width=5)
-                    draw.line((int(ref_img.width/2)+int(text_size[0]/2+int(buffer/2)), ref_coord[1]+int(text_size[1]/2),
-                               draw_bounds[1], ref_coord[1]+int(text_size[1]/2)),
+                    draw.line((int(ref_img.width / 2) + int(text_size[0] / 2 + int(buffer / 2)),
+                               ref_coord[1] + int(text_size[1] / 2),
+                               draw_bounds[1], ref_coord[1] + int(text_size[1] / 2)),
                               fill=(16, 16, 16), width=5)
-                    draw.line((draw_bounds[0]+buffer, ref_coord[1]+(text_size[1]+int(buffer/2)),
-                               draw_bounds[1]-buffer, ref_coord[1]+(text_size[1]+int(buffer/2))),
+                    draw.line((draw_bounds[0] + buffer, ref_coord[1] + (text_size[1] + int(buffer / 2)),
+                               draw_bounds[1] - buffer, ref_coord[1] + (text_size[1] + int(buffer / 2))),
                               fill=(16, 16, 16), width=5)
-                    ref_coord[0] += int(buffer/2)
-                    ref_coord[1] += int(text_size[1]+int(buffer*1.5))
+                    ref_coord[0] += int(buffer / 2)
+                    ref_coord[1] += int(text_size[1] + int(buffer * 1.5))
                     # # Avatar Draw # #
                     avatar_img = Image.open('assets/gigi_avatar.png')
                     if member.avatar:
-                        avatar_img = Image.open(requests.get(member.avatar.url, stream=True).raw).resize((128, 128)).convert('RGBA')
+                        avatar_img = Image.open(requests.get(member.avatar.url, stream=True).raw).resize(
+                            (128, 128)).convert('RGBA')
                     emblem_img = Image.open(f'assets/emblem_{user["level"]}.png').convert('RGBA')
-                    draw.rectangle((ref_coord[0]-5, ref_coord[1]-5,
-                                    ref_coord[0]+avatar_img.width+5, ref_coord[1]+avatar_img.height+5),
+                    draw.rectangle((ref_coord[0] - 5, ref_coord[1] - 5,
+                                    ref_coord[0] + avatar_img.width + 5, ref_coord[1] + avatar_img.height + 5),
                                    fill=(16, 16, 16), width=5)
                     ref_img.paste(avatar_img, (ref_coord[0], ref_coord[1]), avatar_img)
-                    ref_img.paste(emblem_img, (int(ref_coord[0]+int(avatar_img.width/2)-int(emblem_img.width/2)),
-                                               int(ref_coord[1]+avatar_img.height+1)), emblem_img)
-                    ref_coord[0] += avatar_img.width+buffer
+                    ref_img.paste(emblem_img,
+                                  (int(ref_coord[0] + int(avatar_img.width / 2) - int(emblem_img.width / 2)),
+                                   int(ref_coord[1] + avatar_img.height + 1)), emblem_img)
+                    ref_coord[0] += avatar_img.width + buffer
                     # # Level/Exp Draw # #
                     x_anchor = ref_coord[0]
-                    draw.line((ref_coord[0]-buffer, ref_coord[1]+buffer,
-                               draw_bounds[1]-buffer, ref_coord[1]+buffer),
+                    draw.line((ref_coord[0] - buffer, ref_coord[1] + buffer,
+                               draw_bounds[1] - buffer, ref_coord[1] + buffer),
                               fill=(16, 16, 16), width=5)
                     text_size = draw.textsize(text=f'LVL: {user["level"]}', font=text_font)
-                    draw.text((ref_coord[0], ref_coord[1]-int(text_size[1]/2)+1),
+                    draw.text((ref_coord[0], ref_coord[1] - int(text_size[1] / 2) + 1),
                               text=f'LVL: {user["level"]}', fill=(32, 32, 32), font=text_font)
-                    draw.line((ref_coord[0]+text_size[0]+int(buffer/2), ref_coord[1]-buffer,
-                               ref_coord[0]+text_size[0]+int(buffer/2), ref_coord[1]+buffer),
+                    draw.line((ref_coord[0] + text_size[0] + int(buffer / 2), ref_coord[1] - buffer,
+                               ref_coord[0] + text_size[0] + int(buffer / 2), ref_coord[1] + buffer),
                               fill=(16, 16, 16), width=3)
-                    ref_coord[0] += text_size[0]+buffer
+                    ref_coord[0] += text_size[0] + buffer
                     text_size = draw.textsize(text=f'Bounty: ${user["exp"]}', font=text_font)
-                    draw.text((ref_coord[0], ref_coord[1]-int(text_size[1]/2)+1),
+                    draw.text((ref_coord[0], ref_coord[1] - int(text_size[1] / 2) + 1),
                               text=f'Bounty: ${user["exp"]}', fill=(32, 32, 32), font=text_font)
                     # # Alias Draw # #
                     ref_coord[0] = x_anchor
-                    ref_coord[1] += int(buffer*1.5)
+                    ref_coord[1] += int(buffer * 1.5)
                     for platform in user['profile']['aliases']:
                         if user['profile']['aliases'][platform] is not None:
                             username = user['profile']['aliases'][platform]
                             if len(username) > 15:
                                 try:
                                     first, second = username.split(' ')
-                                    username = first+'\n'+second
+                                    username = first + '\n' + second
                                 except ValueError:
                                     pass
                             icon_img = Image.open(f'assets/icon/{platform}_logo.png').resize((24, 24)).convert('RGBA')
                             text_size = draw.textsize(text=f'{username}', font=alias_font)
-                            sample = icon_img.width+int(buffer/2)+text_size[0]+buffer
-                            while sample >= (draw_bounds[1]-x_anchor)/2 or text_size[1] > icon_img.height+5:
-                                alias_font = ImageFont.truetype('assets/font/libel_suit.ttf', size=(alias_font.size-1))
+                            sample = icon_img.width + int(buffer / 2) + text_size[0] + buffer
+                            while sample >= (draw_bounds[1] - x_anchor) / 2 or text_size[1] > icon_img.height + 5:
+                                alias_font = ImageFont.truetype('assets/font/libel_suit.ttf',
+                                                                size=(alias_font.size - 1))
                                 text_size = draw.multiline_textsize(text=f'{username}', font=alias_font, spacing=1)
-                                sample = icon_img.width+int(buffer/2)+text_size[0]+buffer
+                                sample = icon_img.width + int(buffer / 2) + text_size[0] + buffer
                             if (ref_coord[0] + sample) > draw_bounds[1]:
                                 ref_coord[0] = x_anchor
-                                ref_coord[1] += icon_img.height+int(buffer/2)
+                                ref_coord[1] += icon_img.height + int(buffer / 2)
                             ref_img.paste(icon_img, (ref_coord[0], ref_coord[1]), icon_img)
-                            draw.multiline_text((ref_coord[0]+icon_img.width+int(buffer/2), ref_coord[1]-(text_size[1]/2-(icon_img.height/2))),
+                            draw.multiline_text((ref_coord[0] + icon_img.width + int(buffer / 2),
+                                                 ref_coord[1] - (text_size[1] / 2 - (icon_img.height / 2))),
                                                 text=f'{username}', fill=(32, 32, 32), font=alias_font, spacing=1)
                             ref_coord[0] += 117
                     ref_coord[0] = draw_bounds[0]
-                    ref_coord[1] = draw_bounds[3]-int(buffer*1.5)+1
+                    ref_coord[1] = draw_bounds[3] - int(buffer * 1.5) + 1
                     # # Draw Wanted Text # #
                     text_size = draw.textsize(text='Wanted for', font=text_font)
-                    draw.line((ref_coord[0], ref_coord[1], ref_coord[0]+buffer, ref_coord[1]),
+                    draw.line((ref_coord[0], ref_coord[1], ref_coord[0] + buffer, ref_coord[1]),
                               fill=(16, 16, 16), width=5)
-                    draw.text((ref_coord[0]+buffer+2, ref_coord[1]-(text_size[1]/2)),
+                    draw.text((ref_coord[0] + buffer + 2, ref_coord[1] - (text_size[1] / 2)),
                               text='Wanted for', fill=(16, 16, 16), font=text_font)
-                    draw.line((ref_coord[0]+text_size[0]+buffer+1, ref_coord[1], draw_bounds[1]-(buffer*2.5), ref_coord[1]),
+                    draw.line((ref_coord[0] + text_size[0] + buffer + 1, ref_coord[1], draw_bounds[1] - (buffer * 2.5),
+                               ref_coord[1]),
                               fill=(16, 16, 16), width=5)
                     wanted_text = user['profile']['wanted_text']
                     if wanted_text is None:
                         wanted_text = 'Shootin\', lootin\', and rootin\' tootin\' degeneracy'
                     text_font = ImageFont.truetype('assets/font/libel_suit.ttf', size=19)
                     text_size = draw.textsize(text=wanted_text, font=text_font)
-                    draw.text((ref_coord[0]+int(buffer/4), ref_coord[1]+text_size[1]-2),
+                    draw.text((ref_coord[0] + int(buffer / 4), ref_coord[1] + text_size[1] - 2),
                               text=wanted_text, fill=(48, 48, 48), font=text_font)
                     # Send finished image
                     send_buffer = io.BytesIO()
                     ref_img.save(send_buffer, format='PNG')
                     send_buffer.seek(0)
                     await ctx.message.delete()
-                    await ctx.send(file=File(send_buffer, 'myimage.png'))
+                    await ctx.send(file=File(send_buffer, f'{ctx.author.name}profile_card.png'))
 
     @commands.command(name='wanted')
     async def wanted(self, ctx, *text):
@@ -253,12 +262,30 @@ class Profile(commands.Cog):
                 if len(wanted) > 50:
                     await ctx.send(embed=discord.Embed(title='**[Error]** : Wanted Text must be 50 characters or less'))
                     return
-                self.server_db.find_one_and_update({'_id': str(ctx.author.id)}, {'$set': {f'profile.wanted_text': wanted}})
+                self.server_db.find_one_and_update({'_id': str(ctx.author.id)},
+                                                   {'$set': {f'profile.wanted_text': wanted}})
                 await ctx.send(embed=discord.Embed(title='Successfully Updated Wanted Text:',
                                                    description=f'*{wanted}*'))
             else:
-                self.server_db.find_one_and_update({'_id': str(ctx.author.id)}, {'$set': {f'profile.wanted_text': None}})
+                self.server_db.find_one_and_update({'_id': str(ctx.author.id)},
+                                                   {'$set': {f'profile.wanted_text': None}})
                 await ctx.send(embed=discord.Embed(title='Successfully set Wanted Text to Default'))
+
+    @commands.command(hidden=True)
+    @commands.is_owner()
+    async def add_to_db(self, ctx):
+        if os.path.isfile(f'config/{ctx.guild.id}/config.json'):
+            with open(f'config/{ctx.guild.id}/config.json', 'r') as f:
+                config = json.load(f)
+        self.server_db = self.db[str(ctx.guild.id)]['users']
+
+        for member in ctx.guild.members:
+            user = self.server_db.find_one({'_id': str(member.id)})
+            print(user)
+            dict = {}
+            #for platform in user['profile']['aliases']:
+            #    dict[platform] = user['profile']['aliases'][platform]
+            print(user['profile']['aliases'])
 
 
 def setup(bot):
