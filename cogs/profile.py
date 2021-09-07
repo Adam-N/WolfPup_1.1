@@ -22,6 +22,7 @@ class Profile(commands.Cog):
                             'dtg': {'destiny', 'bungie', 'Bungie', 'destiny2'},
                             'xiv': {'ffxiv', 'xiv', 'ff'}}
 
+
     @commands.command(name='build_profile', hidden=True, aliases=['rebuild_profile'])
     @commands.is_owner()
     async def build_profile(self, ctx, member: discord.Member = None, pending=None):
@@ -34,13 +35,16 @@ class Profile(commands.Cog):
             new_profile = {'profile': {'aliases': {
                 'ps': None, 'steam': None, 'xiv': None, 'dtg': None},
                 'wanted_text': None}}
+
+
             if member:
                 self.server_db.find_one_and_update({'_id': str(member.id)}, {'$set': new_profile}, upsert=True)
+                await pending.edit(embed=discord.Embed(title='Done'))
                 return
             for member in ctx.guild.members:
                 if not member.bot:
                     self.server_db.find_one_and_update({'_id': str(member.id)}, {'$set': new_profile}, upsert=True)
-            await pending.edit(embed=discord.Embed(title='Done'))
+            await pending.edit(embed=discord.Embed(title='Profile Stats Reset'))
             return pending
 
     @commands.command(name='set', aliases=['add'])
@@ -61,9 +65,30 @@ class Profile(commands.Cog):
                                                        description=f'**[{platform.upper()}] \u27A4** *{username}*',
                                                        color=discord.Colour.gold()))
                     return
-            error = await ctx.send(embed=discord.Embed(title='Error: invalid platform'))
-            await asyncio.sleep(5)
-            await error.delete()
+            error = await ctx.send(embed=discord.Embed(title='Error: invalid platform'), delete_after=5)
+
+
+    @commands.has_permissions(manage_messages=True)
+    @commands.command(hidden=True)
+    async def staff_set(self, ctx, member: discord.Member, system: str, *name: str):
+        """Add your usernames for your game system"""
+        await ctx.message.delete()
+        username = ' '.join(name)
+        self.server_db = self.db[str(ctx.guild.id)]['users']
+        if await Util.check_channel(ctx, True):
+            for platform in self.sys_aliases:
+                if system.lower() in self.sys_aliases[platform]:
+                    if len(username) > 32:
+                        await ctx.send(
+                            embed=discord.Embed(title='**[Error]** : Usernames must be 32 characters or less'))
+                    self.server_db.find_one_and_update({'_id': str(member.id)},
+                                                       {'$set': {f'profile.aliases.{platform}': username}})
+                    await ctx.send(embed=discord.Embed(title='Successfully Updated Profile',
+                                                       description=f'**[{platform.upper()}] \u27A4** *{username}*',
+                                                       color=discord.Colour.gold()))
+                    return
+            error = await ctx.send(embed=discord.Embed(title='Error: invalid platform'), delete_after=5)
+
 
     @commands.command(name='get')
     async def get(self, ctx, system: str, member: discord.Member = None):
@@ -83,9 +108,9 @@ class Profile(commands.Cog):
                         await ctx.send(embed=discord.Embed(title=f'*{username}*',
                                                            color=discord.Colour.gold()))
                         return
-            error = await ctx.send(embed=discord.Embed(title='Error: invalid platform'))
-            await asyncio.sleep(5)
-            await error.delete()
+                else:
+                    error = await ctx.send(embed=discord.Embed(title='Error: invalid platform'), delete_after=5)
+
 
     @commands.command(name='search')
     async def search(self, ctx, query, exact_match: bool = False):
@@ -129,9 +154,8 @@ class Profile(commands.Cog):
                                                        description=f'**[{platform.upper()}] \u27A4** *N/A*',
                                                        color=discord.Colour.gold()))
                     return
-            error = await ctx.send(embed=discord.Embed(title='Error: invalid platform'))
-            await asyncio.sleep(5)
-            await error.delete()
+            error = await ctx.send(embed=discord.Embed(title='Error: invalid platform'), delete_after=5)
+
 
     @commands.command(aliases=['card', 'profilecard', 'canvas'])
     async def profile(self, ctx, member: discord.Member = None):
@@ -270,23 +294,6 @@ class Profile(commands.Cog):
                 self.server_db.find_one_and_update({'_id': str(ctx.author.id)},
                                                    {'$set': {f'profile.wanted_text': None}})
                 await ctx.send(embed=discord.Embed(title='Successfully set Wanted Text to Default'))
-
-    @commands.command(hidden=True)
-    @commands.is_owner()
-    async def add_to_db(self, ctx):
-        if os.path.isfile(f'config/{ctx.guild.id}/config.json'):
-            with open(f'config/{ctx.guild.id}/config.json', 'r') as f:
-                config = json.load(f)
-        self.server_db = self.db[str(ctx.guild.id)]['users']
-
-        for member in ctx.guild.members:
-            user = self.server_db.find_one({'_id': str(member.id)})
-            print(user)
-            dict = {}
-            #for platform in user['profile']['aliases']:
-            #    dict[platform] = user['profile']['aliases'][platform]
-            print(user['profile']['aliases'])
-
 
 def setup(bot):
     bot.add_cog(Profile(bot))

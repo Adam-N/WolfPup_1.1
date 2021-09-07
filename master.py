@@ -18,6 +18,10 @@ class Master(commands.Cog, name='Master'):
         self.db = Mongo.init_db(Mongo())
         self.server_db = None
         self.start_time = time()
+        self.sys_aliases = {'ps': {'ps', 'psn', 'ps4', 'ps5', 'playstation'},
+                            'steam': {'steam', 'steam64', 'valve'},
+                            'dtg': {'destiny', 'bungie', 'Bungie', 'destiny2'},
+                            'xiv': {'ffxiv', 'xiv', 'ff'}}
 
     @commands.command(name='ping')
     @commands.is_owner()
@@ -206,10 +210,10 @@ class Master(commands.Cog, name='Master'):
                     pending = await Thank.build_thank(Thank(self.bot), ctx, member, pending)
                     pending = await Level.build_bday(Level(self.bot), ctx, member, pending)
                     if member is None:
-                        await pending.edit(embed=discord.Embed(title='Server Rebuild Complete',
+                        await ctx.send(embed=discord.Embed(title='Server Rebuild Complete',
                                                                description=f'Server ID: {str(ctx.guild.id)}'))
                     else:
-                        await pending.edit(embed=discord.Embed(title='User Rebuild Complete',
+                        await ctx.send(embed=discord.Embed(title='User Rebuild Complete',
                                                                description=f'User ID: {str(member.id)}'))
                     return
             except:
@@ -222,13 +226,53 @@ class Master(commands.Cog, name='Master'):
                     pending = await Level.build_level(Level(self.bot), ctx, member, pending)
                     pending = await Profile.build_profile(Profile(self.bot), ctx, member, pending)
                     pending = await Thank.build_thank(Thank(self.bot), ctx, member, pending)
+                    pending = await Level.build_bday(Level(self.bot), ctx, member, pending)
+
                     if member is None:
                         await pending.edit(embed=discord.Embed(title='Server Rebuild Complete',
                                                                description=f'Server ID: {str(ctx.guild.id)}'))
                     else:
                         await pending.edit(embed=discord.Embed(title='User Rebuild Complete',
                                                                description=f'User ID: {str(member.id)}'))
+    @commands.command(hidden=True)
+    @commands.is_owner()
+    async def add_to_db(self, ctx):
+        if os.path.isfile(f'config/{ctx.guild.id}/config.json'):
+            with open(f'config/{ctx.guild.id}/config.json', 'r') as f:
+                config = json.load(f)
+            config_channel = self.bot.get_channel(int(config['channel_config']['config_channel']))
+        self.server_db = self.db[str(ctx.guild.id)]['users']
 
+        for member in ctx.guild.members:
+            if member.bot:
+                continue
+            user = self.server_db.find_one({'_id': str(member.id)})
+            dict = {}
+            new_profile = {}
+            print(member.name)
+            try:
+                for platform in user['profile']['aliases']:
+                    dict[platform] = user['profile']['aliases'][platform]
+                for key in dict:
+                    if key in self.sys_aliases.keys():
+                        new_profile[key] = dict[key]
+
+                new_profile['dtg'] = None
+
+                profile = {'profile':{'aliases': new_profile, 'wanted_text': user['profile']['wanted_text']}}
+                self.server_db.find_one_and_update({'_id': str(member.id)}, {'$set': profile}, upsert=True)
+            except KeyError:
+                pending = await ctx.send(embed=discord.Embed(title='Rebuilding Database...'))
+                pending = await Level.build_level(Level(self.bot), ctx, member, pending)
+                pending = await Profile.build_profile(Profile(self.bot), ctx, member, pending)
+                pending = await Thank.build_thank(Thank(self.bot), ctx, member, pending)
+                pending = await Level.build_bday(Level(self.bot), ctx, member, pending)
+                await ctx.send(embed=discord.Embed(title='User Rebuild Complete',
+                                                       description=f'User ID: {str(member.id)}'))
+            except:
+                await ctx.send(f"user caused error, fix their profile after {member.name}, {member.id}")
+                continue
+        await ctx.send('Done')
 
 def setup(bot):
     bot.add_cog(Master(bot))

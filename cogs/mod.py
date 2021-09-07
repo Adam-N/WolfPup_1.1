@@ -116,9 +116,9 @@ class Mod(commands.Cog):
             embed = discord.Embed(title='Message Deleted')
             embed.add_field(name='Message Author:', value=message.author.mention)
             embed.add_field(name='Channel:', value=message.channel.mention)
-            if len(message.content > 1000):
+            if len(message.content) > 500:
                 msg = message.content
-                msg = msg[0:1000]
+                msg = msg[0:400]
                 embed.add_field(name='Message Content:', value=msg)
             else:
                 embed.add_field(name='Message Content:', value=message.content)

@@ -69,17 +69,20 @@ class Triumphant(commands.Cog, name='Triumphant'):
             if not not_bot_user:
                 user = self.server_db.find()
                 for _, user_data in enumerate(user):
-                    for platform in self.sys_aliases:
-                        username = user_data['profile']['aliases'][platform]
-                        if username is not None:
-                            try:
-                                if username.lower() in copy_embed['description'].lower() and user_data['_id'] not in results:
-                                    results.append(user_data['_id'])
-                                    not_bot_user = int(user_data['_id'])
+                    try:
+                        for platform in self.sys_aliases:
+                            username = user_data['profile']['aliases'][platform]
+                            if username is not None:
+                                try:
+                                    if username.lower() in copy_embed['description'].lower() and user_data['_id'] not in results:
+                                        results.append(user_data['_id'])
+                                        not_bot_user = int(user_data['_id'])
+                                        break
+                                except KeyError:
                                     break
-                            except KeyError:
-                                break
-                    if user_data['_id'] in results:
+                        if user_data['_id'] in results:
+                            break
+                    except KeyError:
                         break
 
             copy_embed = msg.embeds[0].to_dict()

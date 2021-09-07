@@ -35,6 +35,7 @@ class Welcome(commands.Cog):
         total = member.guild.member_count
         welcome_embed.add_field(name="Join number: ", value=f"{total - i}", inline=True)
         await config_channel.send(embed=welcome_embed)
+        await Master.build_user_db(config_channel, member)
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
@@ -64,7 +65,6 @@ class Welcome(commands.Cog):
             ]
             await welcome_channel.send(random.choice(welcome_messages))
             config_channel = self.bot.get_channel(int(config['channel_config']['config_channel']))
-            await Master.build_user_db(config_channel, after)
 
     @commands.Cog.listener()
     async def on_member_remove(self, member):

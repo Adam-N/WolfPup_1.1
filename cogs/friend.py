@@ -95,6 +95,23 @@ class Friend(commands.Cog):
         await ctx.send(
             'https://docs.google.com/document/d/1NSvJ5KsutXBTnjXfL2BgTi-Z7p4EdqXfruAQEtb32VU/edit?usp=sharing')
 
+    @commands.command(name='credits')
+    async def credits(self, ctx):
+        embed = discord.Embed(title='Development Credits',
+                              description='Thank you to all of the following folks for making Gigi possible.',
+                              colour=0xffff33)
+        embed.set_thumbnail(url=self.bot.user.avatar.url)
+        embed.add_field(name='Developers', value='ShiinaBat#8227\nAdam.M#9788\nInf_Wolf14#7391', inline=True)
+        embed.add_field(name='Producers', value='Element#1337\nIlyesia#8008')
+        embed.add_field(name='Alpha Testers',
+                        value='AzureEiyu#9781, Isaac2K#1948, Kurokaito#5489, Vyxea#0001',
+                        inline=False)
+        embed.add_field(name='Character Designer',
+                        value='[NEBULArobo](https://nebularobo.carrd.co/)', inline=False)
+        embed.add_field(name='Icon Artist',
+                        value='[crankiereddy](https://twitter.com/crankiereddy)',
+                        inline=False)
+        await ctx.send(content=None, embed=embed)
 
 def setup(bot):
     bot.add_cog(Friend(bot))

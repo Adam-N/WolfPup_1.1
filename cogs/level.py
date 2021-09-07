@@ -33,11 +33,13 @@ class Level(commands.Cog, name='Level'):
                          'flags': {'daily': True, 'daily_stamp': discord.utils.utcnow(), 'thank': True}}
             if member:
                 self.server_db.find_one_and_update({"_id": str(member.id)}, {'$set': new_level}, upsert=True)
+                await pending.edit(embed=discord.Embed(title='Done'))
                 return
-            for member in ctx.guild.members:
-                if not member.bot:
-                    self.server_db.find_one_and_update({"_id": str(member.id)}, {'$set': new_level}, upsert=True)
-            await pending.edit(embed=discord.Embed(title='Done'))
+            else:
+                for member in ctx.guild.members:
+                    if not member.bot:
+                        self.server_db.find_one_and_update({"_id": str(member.id)}, {'$set': new_level}, upsert=True)
+            await pending.edit(embed=discord.Embed(title='Level Stats Reset'))
             return pending
 
     @staticmethod
@@ -237,11 +239,13 @@ class Level(commands.Cog, name='Level'):
             new_bday = {'bday': {'timestamp': discord.utils.utcnow() - dt.timedelta(days=366)}}
             if member and not member.bot:
                 self.server_db.find_one_and_update({'_id': str(member.id)}, {'$set': new_bday}, upsert=True)
+                await pending.edit(embed=discord.Embed(title='Done'))
                 return
-            for member in ctx.guild.members:
-                if not member.bot:
-                    self.server_db.find_one_and_update({'_id': str(member.id)}, {'$set': new_bday}, upsert=True)
-            await pending.edit(embed=discord.Embed(title='Done'))
+            else:
+                for member in ctx.guild.members:
+                    if not member.bot:
+                        self.server_db.find_one_and_update({'_id': str(member.id)}, {'$set': new_bday}, upsert=True)
+            await pending.edit(embed=discord.Embed(title='Bday Stats Reset'))
             return pending
 
     @commands.command()
@@ -253,7 +257,7 @@ class Level(commands.Cog, name='Level'):
             config = json.load(f)
         user = self.server_db.find_one({'_id': str(ctx.author.id)})
         try:
-            if discord.utils.utcnow() <= user['bday']['timestamp'] + dt.timedelta(days=364):
+            if discord.utils.utcnow() <= user['bday']['timestamp'].astimezone(tz="UTC") + dt.timedelta(days=364):
                 day_delay_embed = discord.Embed(title="\U0001f550 You have to wait until next year! \U0001f550 ")
                 await ctx.send(embed=day_delay_embed)
                 return
@@ -325,17 +329,22 @@ class Level(commands.Cog, name='Level'):
             self.server_db = self.db[str(message.guild.id)]['users']
             user = self.server_db.find_one({'_id': str(message.author.id)})
 
-            # try:
-            if (user['timestamp'].astimezone(tz=pytz.timezone("UTC")) + dt.timedelta(
-                    seconds=45)) <= discord.utils.utcnow():
-                self.server_db.update_one({'_id': str(message.author.id)}, {'$set':
-                                                                                {'timestamp': discord.utils.utcnow()}})
-                await self.update_experience(message.guild.id, message.author.id)
-            '''except KeyError:
+            try:
+                if (user['timestamp'].astimezone(tz=pytz.timezone("UTC")) + dt.timedelta(
+                        seconds=45)) <= discord.utils.utcnow():
+                    self.server_db.update_one({'_id': str(message.author.id)}, {'$set':
+                                                                                    {'timestamp': discord.utils.utcnow()}})
+                    await self.update_experience(message.guild.id, message.author.id)
+            except KeyError:
                 self.server_db.update_one({'_id': str(message.author.id)}, {'$set':
                                                                                 {'timestamp': discord.utils.utcnow()}})
             except TypeError:
-                raise TypeError('Problem with the timezones in level.py')'''
+                with open(f'config/{str(message.guild.id)}/config.json', 'r') as f:
+                    config = json.load(f)
+                config_channel = self.bot.get_channel(int(config['channel_config']['config_channel']))
+
+
+
 
     @commands.command(hidden=True)
     @commands.is_owner()

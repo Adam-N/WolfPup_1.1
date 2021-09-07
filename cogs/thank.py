@@ -25,11 +25,12 @@ class Thank(commands.Cog):
                                     'thanks_given': 0, 'total_given': 0}}
             if member and not member.bot:
                 self.server_db.find_one_and_update({'_id': str(member.id)}, {'$set': new_thank}, upsert=True)
+                await pending.edit(embed=discord.Embed(title='Done'))
                 return
             for member in ctx.guild.members:
                 if not member.bot:
                     self.server_db.find_one_and_update({'_id': str(member.id)}, {'$set': new_thank}, upsert=True)
-            await pending.edit(embed=discord.Embed(title='Done'))
+            await pending.edit(embed=discord.Embed(title='Thank Stats Reset'))
             return pending
 
     @commands.command(name='thank', aliases=['thanks'])
