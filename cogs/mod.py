@@ -113,10 +113,11 @@ class Mod(commands.Cog):
             message = payload.cached_message
             if config['prefix'] in message.content[:len(config['prefix'])] or message.author.bot:
                 return
-            embed = discord.Embed(title='Message Deleted')
-            embed.add_field(name='Message Author:', value=message.author.mention)
-            embed.add_field(name='Channel:', value=message.channel.mention)
-            if len(message.content) > 500:
+            embed = discord.Embed(title='Message Deleted', description=f"{message.author.mention} deleted a message in "
+                                                                       f"{message.channel.mention}")
+            if not message.content:
+                embed.add_field(name='Message Content:', value="No Content")
+            elif len(message.content) > 300:
                 msg = message.content
                 msg = msg[0:400]
                 embed.add_field(name='Message Content:', value=msg)

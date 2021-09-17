@@ -126,12 +126,15 @@ class Triumphant(commands.Cog, name='Triumphant'):
             embed.add_field(name="IDs:", value=id_string)
         if not msg.author.bot:
             embed.set_footer(text=f"ID:{msg.author.id}")
-            embed.set_thumbnail(url=msg.author.avatar.url)
+            try:
+                embed.set_thumbnail(url=msg.author.avatar.url)
+            except TypeError:
+                pass
             embed.add_field(name="Nominated User:", value=f"{msg.author.name}")
         if msg.author.bot:
             if not_bot_user:
                 embed.set_footer(text=f"ID:{not_bot_user}")
-                avatar_member = self.bot.get_user(not_bot_user)
+                avatar_member = await payload.guild.fetch_member(member_id=not_bot_user)
                 embed.set_thumbnail(url=avatar_member.avatar.url)
                 embed.add_field(name="Nominated User:", value=f"{avatar_member.name}")
         if msg.embeds:

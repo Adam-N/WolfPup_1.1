@@ -56,7 +56,7 @@ class LFGCog(commands.Cog, name='lfg'):
                                 continue
                     if last_message.author.bot:
                         continue
-                    if last_message.created_at + dt.timedelta(minutes=90) <= discord.utils.utcnow():
+                    if last_message.created_at + dt.timedelta(minutes=180) <= discord.utils.utcnow():
 
                         embed = discord.Embed(title="**Welcome to the LFG Channel!**",
                                               description="Here's a few tips to help you get the most out of this "
