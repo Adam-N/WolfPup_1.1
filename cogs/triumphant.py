@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import has_permissions
 from lib.mongo import Mongo
+from discord.errors import Forbidden
 
 
 class Triumphant(commands.Cog, name='Triumphant'):
@@ -54,7 +55,10 @@ class Triumphant(commands.Cog, name='Triumphant'):
             async for user in reaction.users():
                 if user.id == self.bot.user.id and str(payload.emoji) in config['triumphant_config']['triumph_react']:
                     return
-        await msg.add_reaction(config['triumphant_config']['triumph_react'])
+        try:
+            await msg.add_reaction(config['triumphant_config']['triumph_react'])
+        except Forbidden:
+            pass
         results = []
         count = 0
         if msg.embeds:
@@ -134,7 +138,7 @@ class Triumphant(commands.Cog, name='Triumphant'):
         if msg.author.bot:
             if not_bot_user:
                 embed.set_footer(text=f"ID:{not_bot_user}")
-                avatar_member = await payload.guild.fetch_member(member_id=not_bot_user)
+                avatar_member = await guild.fetch_member(not_bot_user)
                 embed.set_thumbnail(url=avatar_member.avatar.url)
                 embed.add_field(name="Nominated User:", value=f"{avatar_member.name}")
         if msg.embeds:

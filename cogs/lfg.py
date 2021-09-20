@@ -56,13 +56,13 @@ class LFGCog(commands.Cog, name='lfg'):
                                 continue
                     if last_message.author.bot:
                         continue
-                    if last_message.created_at + dt.timedelta(minutes=180) <= discord.utils.utcnow():
+                    if last_message.created_at + dt.timedelta(minutes=360) <= discord.utils.utcnow():
 
                         embed = discord.Embed(title="**Welcome to the LFG Channel!**",
                                               description="Here's a few tips to help you get the most out of this "
                                                           "channel and successfully find folks to play with.")
 
-                        embed.add_field(name="**1. Tag Usage**",
+                        embed.add_field(name="**Tag Usage**",
                                         value="The best way to draw attention to your LFG is to use the appropriate role "
                                               "tag. This will send a notification directly to folks who are interested in "
                                               "that type of content. Please be patient and allow at least 10-15 minutes "
@@ -81,7 +81,7 @@ class LFGCog(commands.Cog, name='lfg'):
                             role_string = role_string.join(tags)
                             bot_channel = guild.get_channel(586182007852367893)
                             lfg_bot = self.bot.get_user(475744554910351370)
-                            embed.add_field(name="**2. Scheduling LFGs**",
+                            '''embed.add_field(name="**2. Scheduling LFGs**",
                                             value=" We're an adult community so many of our members have limited "
                                                   "playtime due to real life responsibilities. Therefore, you can "
                                                   "ensure a better turn out for your LFG by planning it in advance "
@@ -94,7 +94,7 @@ class LFGCog(commands.Cog, name='lfg'):
                                                   "requirements (experienced only, teaching run, etc.), joining an LFG only "
                                                   "if you meet the requirements, being punctual or communicating immediately "
                                                   "if you'll be late or can't make it, and filling empty spots from the "
-                                                  "tentative list first before opening them to others.", inline=False)
+                                                  "tentative list first before opening them to others.", inline=False)'''
                             embed.add_field(name="Appropriate Tags:", value=f"{role_string}")
 
 
@@ -107,7 +107,7 @@ class LFGCog(commands.Cog, name='lfg'):
                             role_string = role_string.join(tags)
                             bot_channel = guild.get_channel(515355185363812353)
                             lfg_bot = self.bot.get_user(296023718839451649)
-                            embed.add_field(name="**2. Scheduling LFGs**",
+                            '''embed.add_field(name="**2. Scheduling LFGs**",
                                             value=" We're an adult community so many of our members have limited "
                                                   "playtime due to real life responsibilities. Therefore, you can "
                                                   "ensure a better turn out for your LFG by planning it in advance "
@@ -120,7 +120,7 @@ class LFGCog(commands.Cog, name='lfg'):
                                                   "requirements (experienced only, teaching run, etc.), joining an LFG only "
                                                   "if you meet the requirements, being punctual or communicating immediately "
                                                   "if you'll be late or can't make it, and filling empty spots from the "
-                                                  "tentative list first before opening them to others.", inline=False)
+                                                  "tentative list first before opening them to others.", inline=False)'''
                             embed.add_field(name="Appropriate Tags:", value=f"{role_string}")
 
                         elif "pickup" in channel.name:

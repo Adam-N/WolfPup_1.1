@@ -135,7 +135,7 @@ async def monthly():
             await Level.build_level(Level(bot), config_channel)
             await Level.remove_levels_monthly(Level(bot), config_channel.guild)
             await config_channel.send(embed=discord.Embed(title=f'{config_channel.guild.name} Monthly Reset!'))
-'''
+
 @bot.event
 async def on_error(event, *args, **kwargs):
     config_channel = None
@@ -174,12 +174,12 @@ async def on_command_error(event, *args, **kwargs):
     new_embed.add_field(name='User', value=f"{message.author.display_name}")
     new_embed.add_field(name='Channel', value=f"{message.channel.name}")
     new_embed.add_field(name='Content', value=f"{message.content}")
-    new_embed.description = '```py\n%s\n```' % traceback.format_exc()
+    new_embed.description = f'```py\n{traceback.format_exc()}\n```'
 
     if kwargs:
         new_embed.add_field(name="Arguments", value=f"{kwargs}")
     await config_channel.send(embed=new_embed)
-'''
+
 
 async def change_presence():
     game = discord.Game(";help for more information")

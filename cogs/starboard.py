@@ -32,6 +32,7 @@ class Starboard(commands.Cog, name='Starboard'):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
+        content = False
         self_starred = False
         try:
             if os.path.isfile(f'config/{payload.guild_id}/config.json'):
@@ -64,8 +65,10 @@ class Starboard(commands.Cog, name='Starboard'):
                                     content = copy_embed["description"]
                                 except:
                                     pass
+
                                 if not content:
                                     content = copy_embed['title']
+
 
                             if "fields" in copy_embed:
                                 for embeds in message.embeds:

@@ -41,29 +41,29 @@ class Leaderboard(commands.Cog):
                     listing, list_user, f_name, user_str = '', '', '', ''
                     stat_1, stat_2, my_stat = None, None, None
                     for user in users:
-                        try:
-                            list_user = self.bot.get_user(int(user["_id"]))
+                        #try:
+                        list_user = self.bot.get_user(int(user["_id"]))
 
-                            try:
-                                stat_1, stat_2 = stat.split('.')
-                            except ValueError:
-                                pass
-                            if stat_2 is not None:
-                                f_name = f'**{stat_2.capitalize().replace("_", " ")}**'
-                                user_str = f'`[{str(rank)}.]` *{list_user.name} :* **{user[stat_1][stat_2]}**'
-                            else:
-                                f_name = f'**{stat.capitalize()}**'
-                                user_str = f'`[{str(rank)}.]` *{list_user.name} :* **{user[stat]}**'
-                            if list_user == ctx.author:
-                                my_stat = user_str
-                                user_str = f'**\u27A4** {user_str} '
-                            if rank <= 15:
-                                listing += f'{user_str}\n'
-                                rank += 1
-                        except (AttributeError, KeyError):
+                        try:
+                            stat_1, stat_2 = stat.split('.')
+                        except ValueError:
+                            pass
+                        if stat_2 is not None:
+                            f_name = f'**{stat_2.capitalize().replace("_", " ")}**'
+                            user_str = f'`[{str(rank)}.]` *{list_user.name} :* **{user[stat_1][stat_2]}**'
+                        else:
+                            f_name = f'**{stat.capitalize()}**'
+                            user_str = f'`[{str(rank)}.]` *{list_user.name} :* **{user[stat]}**'
+                        if list_user == ctx.author:
+                            my_stat = user_str
+                            user_str = f'**\u27A4** {user_str} '
+                        if rank <= 15:
+                            listing += f'{user_str}\n'
+                            rank += 1
+                        '''except (AttributeError, KeyError):
                             config_channel = await self.bot.fetch_channel(config['channel_config']['config_channel'])
                             await config_channel.send(f'Error. {user["_id"]} created the error.')
-                            continue
+                            continue'''
                     if my_stat is not None:
                         listing += f'\n__**Your Ranking:**__\n{my_stat}'
                     new_embed.add_field(name=f_name,

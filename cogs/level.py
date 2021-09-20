@@ -245,7 +245,7 @@ class Level(commands.Cog, name='Level'):
                 for member in ctx.guild.members:
                     if not member.bot:
                         self.server_db.find_one_and_update({'_id': str(member.id)}, {'$set': new_bday}, upsert=True)
-            await pending.edit(embed=discord.Embed(title='Bday Stats Reset'))
+            await ctx.send(embed=discord.Embed(title='Bday Stats Reset'))
             return pending
 
     @commands.command()

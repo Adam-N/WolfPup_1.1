@@ -229,10 +229,10 @@ class Master(commands.Cog, name='Master'):
                     pending = await Level.build_bday(Level(self.bot), ctx, member, pending)
 
                     if member is None:
-                        await pending.edit(embed=discord.Embed(title='Server Rebuild Complete',
+                        await ctx.send(embed=discord.Embed(title='Server Rebuild Complete',
                                                                description=f'Server ID: {str(ctx.guild.id)}'))
                     else:
-                        await pending.edit(embed=discord.Embed(title='User Rebuild Complete',
+                        await ctx.send(embed=discord.Embed(title='User Rebuild Complete',
                                                                description=f'User ID: {str(member.id)}'))
     @commands.command(hidden=True)
     @commands.is_owner()
