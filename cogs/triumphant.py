@@ -168,7 +168,7 @@ class Triumphant(commands.Cog, name='Triumphant'):
     @commands.command(hidden=True)
     @has_permissions(manage_messages=True)
     async def triumph_delete(self, ctx, member_id: int):
-        member = await ctx.guild.fetch_member(member_id=member_id)
+        member = await ctx.guild.fetch_member(member_id)
         with open(f'config/{ctx.guild.id}/triumphant.json', 'r') as f:
             users = json.load(f)
         try:
@@ -187,7 +187,7 @@ class Triumphant(commands.Cog, name='Triumphant'):
     @commands.command(hidden=True)
     @has_permissions(manage_messages=True)
     async def triumph_add(self, ctx, member_id: int):
-        member = await ctx.guild.fetch_member(member_id=member_id)
+        member = await ctx.guild.fetch_member(member_id)
         with open(f'config/{ctx.guild.id}/triumphant.json', 'r') as f:
             users = json.load(f)
 
