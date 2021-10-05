@@ -15,18 +15,27 @@ class Thank(commands.Cog):
     @commands.command(name='build_thank', hidden=True, aliases=['rebuild_thank'])
     @commands.is_owner()
     async def build_thank(self, ctx, member: discord.Member = None, pending=None):
+        # Gets DB
         self.server_db = self.db[str(ctx.guild.id)]['users']
+
+        # Pending is used when using a more upstream command.
         if pending:
             await pending.edit(embed=discord.Embed(title='Rebuilding Thank stats...'))
         else:
+            # If no pending, it makes it's own embed to edit later.
             pending = await ctx.send(embed=discord.Embed(title='Rebuilding Thank stats...'))
+
+        # Checks if it is a bot channel
         if await Util.check_channel(ctx, True):
             new_thank = {'thanks': {'thanks_received': 0, 'total_received': 0,
                                     'thanks_given': 0, 'total_given': 0}}
+            # If it is a member it only rebuilds that members thanks.
             if member and not member.bot:
                 self.server_db.find_one_and_update({'_id': str(member.id)}, {'$set': new_thank}, upsert=True)
                 await pending.edit(embed=discord.Embed(title='Done'))
                 return
+
+            # If no member is specified it builds for the whole server.
             for member in ctx.guild.members:
                 if not member.bot:
                     self.server_db.find_one_and_update({'_id': str(member.id)}, {'$set': new_thank}, upsert=True)
@@ -35,14 +44,27 @@ class Thank(commands.Cog):
 
     @commands.command(name='thank', aliases=['thanks'])
     async def thank(self, ctx, member: discord.Member, *args):
+        if not member:
+            ctx.send('Please properly tag a user', delete_after=5)
+            raise TypeError('Error Finding User')
+        # Finds the DB
         self.server_db = self.db[str(ctx.guild.id)]['users']
+
+        # Creates the reason for thanking, or builds it based on the user input
         reason = 'For being such a great person!'
         if args:
             reason = ' '.join(args)
+
+        # Checks if it is a bot channel.
         if await Util.check_channel(ctx, False):
             if not member.bot:
+
+                # Gets user information from DB
                 user = self.server_db.find_one({'_id': str(ctx.author.id)})
+
+                # Checks to see if the user has used thank yet today.
                 if user['flags']['thank']:
+
                     if ctx.author == member:
                         new_embed = discord.Embed(title='\U0001f441\U0001f441 You tried to thank yourself,'
                                                         ' shame on you \U0001f441\U0001f441')
@@ -54,22 +76,30 @@ class Thank(commands.Cog):
                         new_embed.set_image(url=random.choice(shame_gifs))
                         await ctx.send(embed=new_embed)
                         return
+
+                    # builds the embed to send.
                     new_embed = discord.Embed(title=f'\U0001f49d {ctx.author.display_name}'
                                                     f' *has thanked* {member.display_name} \U0001f49d',
                                               description=f'*{reason}*',
                                               color=discord.Colour.gold())
                     await ctx.send(embed=new_embed)
+
+                    # Finds thanker and thankee DB info and updates it and adds experience.
                     self.server_db.find_one_and_update({'_id': str(ctx.author.id)}, {'$set': {'flags.thank': False}})
                     self.server_db.find_one_and_update({'_id': str(ctx.author.id)}, {'$inc': {'thanks.thanks_given': 1,
                                                                                               'thanks.total_given': 1}})
-                    await Level.update_experience(Level(self.bot), str(ctx.guild.id), str(ctx.author.id), random.randint(450, 550))
+                    await Level.update_experience(Level(self.bot), str(ctx.guild.id), str(ctx.author.id),
+                                                  random.randint(450, 550))
                     self.server_db.find_one_and_update({'_id': str(member.id)}, {'$inc': {'thanks.thanks_received': 1,
                                                                                           'thanks.total_received': 1}})
-                    await Level.update_experience(Level(self.bot), str(ctx.guild.id), str(member.id), random.randint(850, 1150))
+                    await Level.update_experience(Level(self.bot), str(ctx.guild.id), str(member.id),
+                                                  random.randint(850, 1150))
                 else:
-                    await ctx.send(embed=discord.Embed(title=':broken_heart: You\'ve already thanked someone today! :broken_heart:',
-                                                       description='*Sorry, but you can give another thank tomorrow!*',
-                                                       color=discord.Colour.gold()))
+                    # Seends this embed if someone has already thanked today.
+                    await ctx.send(embed=discord.Embed(
+                        title=':broken_heart: You\'ve already thanked someone today! :broken_heart:',
+                        description='*Sorry, but you can give another thank tomorrow!*',
+                        color=discord.Colour.gold()))
 
     @commands.command(name='my_thanks')
     async def my_thanks(self, ctx):

@@ -134,7 +134,8 @@ class WishWall(commands.Cog):
                 for_thread = await channel.send(embed=(await self.build_embed(author=comm_owner, description=comm_desc,
                                                                               id=comm_id, channel=channel)),
                                                 view=Buttons(self.bot))
-
+                if len(comm_desc) >= 100:
+                    comm_desc = comm_desc[0:99]
                 await for_thread.create_thread(name=comm_desc)
                 self.bot.add_view(Buttons(self.bot), message_id=for_thread.id)
                 await ctx.message.delete()

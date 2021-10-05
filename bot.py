@@ -71,6 +71,7 @@ async def weekly():
 
 
 async def triumphant_reset(server):
+    # This resets the triumphant for the week.
     with open(f'config/{server.id}/config.json', 'r') as f:
         config = json.load(f)
     chan = bot.get_channel(int(config['triumphant_config']["triumph_channel"]))
@@ -174,7 +175,8 @@ async def on_command_error(event, *args, **kwargs):
     new_embed.add_field(name='User', value=f"{message.author.display_name}")
     new_embed.add_field(name='Channel', value=f"{message.channel.name}")
     new_embed.add_field(name='Content', value=f"{message.content}")
-    new_embed.description = f'```py\n{traceback.format_exc()}\n```'
+    traceback_text = '```py\n%s\n```' % traceback.format_exc()
+    new_embed.description = f'```py\n{traceback_text}\n```'
 
     if kwargs:
         new_embed.add_field(name="Arguments", value=f"{kwargs}")
