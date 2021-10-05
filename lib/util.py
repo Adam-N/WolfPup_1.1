@@ -24,8 +24,9 @@ class Util:
         mins, secs = divmod(seconds, 60)
         hrs, mins = divmod(mins, 60)
         dys, hrs = divmod(hrs, 24)
-        yrs, dys = divmod(dys, 365)
-        timedict = {'year': yrs, 'day': dys, 'hour': hrs, 'minute': mins, 'second': secs}
+        mts, dys = divmod(dys, 30)
+        yrs, mts = divmod(mts, 12)
+        timedict = {'year': yrs, 'month': mts, 'day': dys, 'hour': hrs, 'minute': mins, 'second': secs}
         cleaned = {k: v for k, v in timedict.items() if v != 0}
         return " ".join(Util.sing(v, k) for k, v in cleaned.items())
 
@@ -36,26 +37,49 @@ class Util:
         with open(f'config/{ctx.guild.id}/config.json', 'r') as f:
             config = json.load(f)
         if bot_exclusive:
-            if ctx.channel.type is discord.ChannelType.text:
-                if ctx.channel.id not in config['channel_config']['bot_channels']:
-                    await ctx.send(embed=discord.Embed(title='This command is __only__ available in bot channels!'))
-                    return False
-            elif ctx.channel.type is discord.ChannelType.private_thread or \
-                    ctx.channel.type is discord.ChannelType.public_thread:
-                if ctx.channel.parent_id not in config['channel_config']['bot_channels']:
-                    await ctx.send(embed=discord.Embed(title='This command is __only__ available in bot channels!'))
-                    return False
+            try:
+                if ctx.channel.type is discord.ChannelType.text:
+                    if ctx.channel.id not in config['channel_config']['bot_channels']:
+                        await ctx.send(embed=discord.Embed(title='This command is __only__ available in bot channels!'))
+                        return False
+                elif ctx.channel.type is discord.ChannelType.private_thread or \
+                        ctx.channel.type is discord.ChannelType.public_thread:
+                    if ctx.channel.parent_id not in config['channel_config']['bot_channels']:
+                        await ctx.send(embed=discord.Embed(title='This command is __only__ available in bot channels!'))
+                        return False
+            except AttributeError:
+                if ctx.type is discord.ChannelType.text:
+                    if ctx.channel.id not in config['channel_config']['bot_channels']:
+                        await ctx.send(embed=discord.Embed(title='This command is __only__ available in bot channels!'))
+                        return False
+                elif ctx.type is discord.ChannelType.private_thread or \
+                        ctx.channel.type is discord.ChannelType.public_thread:
+                    if ctx.parent_id not in config['channel_config']['bot_channels']:
+                        await ctx.send(embed=discord.Embed(title='This command is __only__ available in bot channels!'))
+                        return False
 
         elif bot_exclusive is not None:
-            if ctx.channel.type is discord.ChannelType.text:
-                if ctx.channel.id in config['channel_config']['bot_channels']:
-                    await ctx.send(embed=discord.Embed(title='This command is __NOT__ available in bot channels!'))
-                    return False
-            elif ctx.channel.type is discord.ChannelType.private_thread or \
-                    ctx.channel.type is discord.ChannelType.public_thread:
-                if ctx.channel.parent_id in config['channel_config']['bot_channels']:
-                    await ctx.send(embed=discord.Embed(title='This command is __NOT__ available in bot channels!'))
-                    return False
+            try:
+                if ctx.channel.type is discord.ChannelType.text:
+                    if ctx.channel.id in config['channel_config']['bot_channels']:
+                        await ctx.send(embed=discord.Embed(title='This command is __NOT__ available in bot channels!'))
+                        return False
+                elif ctx.channel.type is discord.ChannelType.private_thread or \
+                        ctx.channel.type is discord.ChannelType.public_thread:
+                    if ctx.channel.parent_id in config['channel_config']['bot_channels']:
+                        await ctx.send(embed=discord.Embed(title='This command is __NOT__ available in bot channels!'))
+                        return False
+            except AttributeError:
+                if ctx.type is discord.ChannelType.text:
+                    if ctx.id in config['channel_config']['bot_channels']:
+                        await ctx.send(embed=discord.Embed(title='This command is __NOT__ available in bot channels!'))
+                        return False
+                elif ctx.type is discord.ChannelType.private_thread or \
+                        ctx.type is discord.ChannelType.public_thread:
+                    if ctx.parent_id in config['channel_config']['bot_channels']:
+                        await ctx.send(embed=discord.Embed(title='This command is __NOT__ available in bot channels!'))
+                        return False
+
         return True
 
     @staticmethod

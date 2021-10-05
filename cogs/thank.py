@@ -95,7 +95,7 @@ class Thank(commands.Cog):
                     await Level.update_experience(Level(self.bot), str(ctx.guild.id), str(member.id),
                                                   random.randint(850, 1150))
                 else:
-                    # Seends this embed if someone has already thanked today.
+                    # Sends this embed if someone has already thanked today.
                     await ctx.send(embed=discord.Embed(
                         title=':broken_heart: You\'ve already thanked someone today! :broken_heart:',
                         description='*Sorry, but you can give another thank tomorrow!*',

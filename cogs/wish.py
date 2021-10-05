@@ -13,10 +13,12 @@ class WishWall(commands.Cog):
     @commands.command(name='init_wish', hidden=True, aliases=['init_iw', 'iw_init'])
     @commands.is_owner()
     async def init_wish(self, ctx):
+
+        # Loads config
         if os.path.isfile(f'config/{ctx.guild.id}/config.json'):
             with open(f'config/{ctx.guild.id}/config.json', 'r') as f:
                 config = json.load(f)
-
+            # Builds the configs for the two channels.
             wishwall_xiv = {
                 'channel': ctx.channel.id,
                 'image': 'https://cdn.discordapp.com/attachments/532380077896237061/786762838789849139/Cid_ARR.jpg',
