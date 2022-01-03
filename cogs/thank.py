@@ -1,9 +1,10 @@
 import random
 import discord
 from discord.ext import commands
+
+from cogs.gold import Gold
 from lib.util import Util
 from lib.mongo import Mongo
-from cogs.level import Level
 
 
 class Thank(commands.Cog):
@@ -55,7 +56,7 @@ class Thank(commands.Cog):
         if args:
             reason = ' '.join(args)
 
-        # Checks if it is a bot channel.
+        # Checks if it is a bot channel needs to be in a non-bot channel.
         if await Util.check_channel(ctx, False):
             if not member.bot:
 
@@ -84,16 +85,19 @@ class Thank(commands.Cog):
                                               color=discord.Colour.gold())
                     await ctx.send(embed=new_embed)
 
-                    # Finds thanker and thankee DB info and updates it and adds experience.
+                    # Finds thanker and thankee DB info and updates it and adds gold.
                     self.server_db.find_one_and_update({'_id': str(ctx.author.id)}, {'$set': {'flags.thank': False}})
                     self.server_db.find_one_and_update({'_id': str(ctx.author.id)}, {'$inc': {'thanks.thanks_given': 1,
                                                                                               'thanks.total_given': 1}})
-                    await Level.update_experience(Level(self.bot), str(ctx.guild.id), str(ctx.author.id),
-                                                  random.randint(450, 550))
+                    self.server_db.find_one_and_update({'_id': str(ctx.author.id)}, {'$inc': {'gold.amount': 10}})
+
+                    self.server_db.find_one_and_update({'_id': str(member.id)}, {'$inc': {'gold.amount': 10}})
                     self.server_db.find_one_and_update({'_id': str(member.id)}, {'$inc': {'thanks.thanks_received': 1,
                                                                                           'thanks.total_received': 1}})
-                    await Level.update_experience(Level(self.bot), str(ctx.guild.id), str(member.id),
-                                                  random.randint(850, 1150))
+                    # Logs gold change
+                    await Gold.gold_log(Gold(self.bot), ctx.guild, ctx.author, 10, ctx.channel, True, 'Thank: Thanker')
+                    await Gold.gold_log(Gold(self.bot), ctx.guild, member, 10, ctx.channel, True, 'Thank: Thanked')
+
                 else:
                     # Sends this embed if someone has already thanked today.
                     await ctx.send(embed=discord.Embed(
@@ -103,10 +107,18 @@ class Thank(commands.Cog):
 
     @commands.command(name='my_thanks')
     async def my_thanks(self, ctx):
+        # Deletes command message
         await ctx.message.delete()
+
+        # Gets server information
         self.server_db = self.db[str(ctx.guild.id)]['users']
+
+        # Checks if it is in a bot channel
         if await Util.check_channel(ctx, True):
+            # Pulls user information from the DB
             user = self.server_db.find_one({'_id': str(ctx.author.id)})
+
+            # Builds Embed
             new_embed = discord.Embed(title=f'{ctx.author.display_name}\'s Stats',
                                       color=discord.Colour.gold())
             for stat in user['thanks']:

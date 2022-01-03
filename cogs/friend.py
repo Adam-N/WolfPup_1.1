@@ -12,11 +12,13 @@ class Friend(commands.Cog):
     async def nomean(self, ctx):
         """This command is for a friend who is being mean to themselves.
         Show them who's boss and cheer them up!"""
+        images = ["https://i.imgur.com/Q3mF2RV.jpg",
+                  'https://cdn.discordapp.com/attachments/532380077896237061/791855065111592970/20200928_123113.jpg']
         embed = discord.Embed(color=0x00ff00)
         embed.title = "Don't be mean to yourself"
         embed.description = 'This is because we love you'
         embed.set_image(
-            url='https://cdn.discordapp.com/attachments/532380077896237061/791855065111592970/20200928_123113.jpg')
+            url= random.choice(images))
         await ctx.channel.send(embed=embed)
 
     @commands.command(name='nosuck', description="For friend's who think they suck.")

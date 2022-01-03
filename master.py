@@ -5,6 +5,9 @@ import discord
 from discord.ext import commands
 from time import time
 import datetime as dt
+
+from cogs.gold import Gold
+from cogs.starboard import Starboard
 from lib.mongo import Mongo
 from cogs.level import Level
 from cogs.profile import Profile
@@ -205,10 +208,11 @@ class Master(commands.Cog, name='Master'):
                         self.db[str(ctx.guild.id)].drop_collection('users')
                     else:
                         self.db[str(ctx.guild.id)]['users'].find_one_and_delete({'_id': member.id})
-                    pending = await Level.build_level(Level(self.bot), ctx, member, pending)
+                    # pending = await Level.build_level(Level(self.bot), ctx, member, pending)
                     pending = await Profile.build_profile(Profile(self.bot), ctx, member, pending)
-                    pending = await Thank.build_thank(Thank(self.bot), ctx, member, pending)
-                    pending = await Level.build_bday(Level(self.bot), ctx, member, pending)
+                    # pending = await Thank.build_thank(Thank(self.bot), ctx, member, pending)
+                    # pending = await Level.build_bday(Level(self.bot), ctx, member, pending)
+                    pending = await Starboard.build_sb(Starboard(self.bot), ctx, member, pending)
                     if member is None:
                         await ctx.send(embed=discord.Embed(title='Server Rebuild Complete',
                                                                description=f'Server ID: {str(ctx.guild.id)}'))
@@ -223,10 +227,11 @@ class Master(commands.Cog, name='Master'):
                         self.db[str(ctx.guild.id)].drop_collection('users')
                     else:
                         self.db[str(ctx.guild.id)]['users'].find_one_and_delete({'_id': member.id})
-                    pending = await Level.build_level(Level(self.bot), ctx, member, pending)
+                    # pending = await Level.build_level(Level(self.bot), ctx, member, pending)
                     pending = await Profile.build_profile(Profile(self.bot), ctx, member, pending)
-                    pending = await Thank.build_thank(Thank(self.bot), ctx, member, pending)
-                    pending = await Level.build_bday(Level(self.bot), ctx, member, pending)
+                    # pending = await Thank.build_thank(Thank(self.bot), ctx, member, pending)
+                    # pending = await Level.build_bday(Level(self.bot), ctx, member, pending)
+                    pending = await Starboard.build_sb(Starboard(self.bot), ctx, member, pending)
 
                     if member is None:
                         await ctx.send(embed=discord.Embed(title='Server Rebuild Complete',
@@ -263,7 +268,7 @@ class Master(commands.Cog, name='Master'):
                 self.server_db.find_one_and_update({'_id': str(member.id)}, {'$set': profile}, upsert=True)
             except KeyError:
                 pending = await ctx.send(embed=discord.Embed(title='Rebuilding Database...'))
-                pending = await Level.build_level(Level(self.bot), ctx, member, pending)
+                pending = await Gold.build_gold(Gold(self.bot), ctx, member, pending)
                 pending = await Profile.build_profile(Profile(self.bot), ctx, member, pending)
                 pending = await Thank.build_thank(Thank(self.bot), ctx, member, pending)
                 pending = await Level.build_bday(Level(self.bot), ctx, member, pending)

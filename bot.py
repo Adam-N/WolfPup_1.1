@@ -26,14 +26,15 @@ def get_prefix(bot, message):
 
 
 initial_cogs = ['master', 'cogs.mod', 'cogs.welcome',
-                'cogs.level', 'cogs.profile', 'cogs.thank', 'cogs.leaderboard', 'cogs.friend',
-                'cogs.games', 'cogs.roles', 'cogs.starboard', 'cogs.timer', 'cogs.triumphant', 'cogs.wish',
+                'cogs.profile', 'cogs.friend', 'cogs.gold',
+                'cogs.games',  'cogs.starboard', 'cogs.timer', 'cogs.triumphant', 'cogs.wish',
                 'cogs.lfg']
 
 intents = discord.Intents.default()
 intents.members = True
 intents.messages = True
 intents.reactions = True
+intents.bans = True
 
 bot = commands.Bot(command_prefix=get_prefix, description='A bot designed for GoldxGuns', intents=intents)
 if __name__ == '__main__':
@@ -98,9 +99,8 @@ async def triumphant_reset(server):
 
     await chan.send(embed=reset_embed)
 
-
+"""
 async def cactpot():
-    """Cactpot Reminder"""
     for server in bot.guilds:
         with open(f'config/{str(server.id)}/config.json', 'r') as f:
             config = json.load(f)
@@ -121,7 +121,6 @@ async def cactpot():
 
 
 async def monthly():
-    """Monthly reset timer"""
     for guild in bot.guilds:
         if os.path.isfile(f'config/{str(guild.id)}/config.json'):
             with open(f'config/{str(guild.id)}/config.json', 'r') as f:
@@ -135,8 +134,8 @@ async def monthly():
             await Mod.award_monthly_roles(Mod(bot), guild)
             await Level.build_level(Level(bot), config_channel)
             await Level.remove_levels_monthly(Level(bot), config_channel.guild)
-            await config_channel.send(embed=discord.Embed(title=f'{config_channel.guild.name} Monthly Reset!'))
-
+            await config_channel.send(embed=discord.Embed(title=f'{config_channel.guild.name} Monthly Reset!'))"""
+"""
 @bot.event
 async def on_error(event, *args, **kwargs):
     config_channel = None
@@ -182,7 +181,7 @@ async def on_command_error(event, *args, **kwargs):
         new_embed.add_field(name="Arguments", value=f"{kwargs}")
     await config_channel.send(embed=new_embed)
 
-
+"""
 async def change_presence():
     game = discord.Game(";help for more information")
     await bot.change_presence(status=discord.Status.idle, activity=game)
@@ -212,8 +211,8 @@ async def on_disconnect():
 
 print('\nLoading token and connecting to client...')
 token = open('token.txt', 'r').readline()
-schedule.add_job(daily, 'cron', day='*', hour=18)
+# schedule.add_job(daily, 'cron', day='*', hour=18)
 schedule.add_job(weekly, 'cron', week='*', day_of_week='sat', hour=22)
-schedule.add_job(monthly, 'cron', month='*', day='1')
+# schedule.add_job(monthly, 'cron', month='*', day='1')
 schedule.start()
 bot.run(token, reconnect=True)

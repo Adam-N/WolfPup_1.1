@@ -101,6 +101,8 @@ class Util:
         for member in ctx.guild.members:
             if not member.bot:
                 self.server_db.find_one_and_update({"_id": str(member.id)}, {'$set': reset_flags})
+                self.server_db.find_one_and_update({'_id': str(member.id)}, {'$set':
+                    {'gold.daily_count': 0}})
 
     @staticmethod
     async def reset_config(ctx):

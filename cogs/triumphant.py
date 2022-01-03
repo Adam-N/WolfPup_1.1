@@ -168,18 +168,28 @@ class Triumphant(commands.Cog, name='Triumphant'):
     @commands.command(hidden=True)
     @has_permissions(manage_messages=True)
     async def triumph_delete(self, ctx, member_id: int):
-        member = await ctx.guild.fetch_member(member_id)
-        with open(f'config/{ctx.guild.id}/triumphant.json', 'r') as f:
-            users = json.load(f)
         try:
-            if users[str(member_id)] == 1:
-                del users[str(member_id)]
+            member = await ctx.guild.fetch_member(member_id)
+            with open(f'config/{ctx.guild.id}/triumphant.json', 'r') as f:
+                users = json.load(f)
+            try:
+                if users[str(member_id)] == 1:
+                    del users[str(member_id)]
+            except:
+                del_embed = discord.Embed(title='User was not in the list')
+                del_embed.add_field(name="User:", value=f"{member.name}")
+                del_embed.add_field(name="User Id:", value=f"{member_id}")
+                await ctx.send(embed=del_embed)
+                return
         except:
-            del_embed = discord.Embed(title='User was not in the list')
-            del_embed.add_field(name="User:", value=f"{member.name}")
-            del_embed.add_field(name="User Id:", value=f"{member_id}")
-            await ctx.send(embed=del_embed)
-            return
+            with open(f'config/{ctx.guild.id}/triumphant.json', 'r') as f:
+                users = json.load(f)
+            try:
+                if users[str(member_id)] == 1:
+                    del users[str(member_id)]
+            except:
+                await ctx.send('User not in DB.')
+                return
         with open(f'config/{ctx.guild.id}/triumphant.json', 'w+') as f:
             json.dump(users, f)
         await ctx.send(f"Succesfully deleted {member.name} from triumphant list. ID: {member_id}")
@@ -224,10 +234,12 @@ class Triumphant(commands.Cog, name='Triumphant'):
                 users = json.load(f)
 
         for key in users:
-            member = await ctx.guild.fetch_member(member_id=int(key))
-            user_list = user_list + str(member.name) + " \n"
-            id_list = id_list + key + " \n"
-
+            try:
+                member = await ctx.guild.fetch_member(member_id=int(key))
+                user_list = user_list + str(member.name) + " \n"
+                id_list = id_list + key + " \n"
+            except:
+                continue
         list_embed = discord.Embed(title=f'Members on the triumphant list {copy}')
         list_embed.add_field(name='List:', value=f"{user_list}")
         list_embed.add_field(name="IDs:", value=f"{id_list}")
@@ -236,29 +248,35 @@ class Triumphant(commands.Cog, name='Triumphant'):
     @commands.command(aliases=["give_triumph", "triumph_give"],hidden=True)
     @has_permissions(manage_messages=True)
     async def give_triumphant(self, ctx):
-        with open(f'config/{ctx.guild.id}/config.json', 'r') as f:
-            config = json.load(f)
-        triumphant_role = ctx.guild.get_role(int(config['role_config']["triumphant"]))
+        async with ctx.channel.typing():
+            with open(f'config/{ctx.guild.id}/config.json', 'r') as f:
+                config = json.load(f)
+            triumphant_role = ctx.guild.get_role(int(config['role_config']["triumphant"]))
 
-        current_triumphant = list(triumphant_role.members)
-        member_list = ""
+            current_triumphant = list(triumphant_role.members)
+            member_list = ""
+            triumph_embed = discord.Embed(title="Triumphant Role Success",
+                                          description="These users have received their role.")
 
-        with open(f'config/{ctx.guild.id}/triumphant_copy.json', 'r') as f:
-            users = json.load(f)
+            with open(f'config/{ctx.guild.id}/triumphant_copy.json', 'r') as f:
+                users = json.load(f)
 
-        for member in current_triumphant:
-            await member.remove_roles(triumphant_role)
+            for member in current_triumphant:
+                await member.remove_roles(triumphant_role)
 
-        for key in users:
-            user = ctx.channel.guild.get_member(user_id=int(key))
-            member_list = member_list + user.name + '\n'
-            await user.add_roles(triumphant_role)
-        os.remove(f'config/{ctx.guild.id}/triumphant_copy.json')
+            for key in users:
+                try:
+                    user = ctx.channel.guild.get_member(user_id=int(key))
+                    member_list = member_list + user.name + '\n'
+                    await user.add_roles(triumphant_role)
+                except AttributeError:
+                    continue
 
-        triumph_embed = discord.Embed(title="Triumphant Role Success",
-                                      description="These users have received their role.")
-        triumph_embed.add_field(name="Users:", value=f"{member_list}")
-        await ctx.send(embed=triumph_embed)
+            os.remove(f'config/{ctx.guild.id}/triumphant_copy.json')
+
+
+            triumph_embed.add_field(name="Users:", value=f"{member_list}")
+            await ctx.send(embed=triumph_embed)
 
     @commands.command(hidden=True)
     @commands.is_owner()

@@ -22,6 +22,8 @@ class Welcome(commands.Cog):
         created = discord.utils.utcnow() - member.created_at
         welcome_embed.add_field(name="Created:",
                               value=f"{Util.deltaconv(int(created.total_seconds()))} ago")
+        if int(created.total_seconds()) < 864000:
+            welcome_embed.add_field(name="**New Account Warning**", value=" ")
         welcome_embed.set_thumbnail(url=member.avatar.url)
         welcome_embed.timestamp = discord.utils.utcnow()
         i = 0
