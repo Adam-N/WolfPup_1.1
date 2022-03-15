@@ -108,7 +108,7 @@ class Thank(commands.Cog):
     @commands.command(name='my_thanks')
     async def my_thanks(self, ctx):
         # Deletes command message
-        await ctx.message.delete()
+         
 
         # Gets server information
         self.server_db = self.db[str(ctx.guild.id)]['users']

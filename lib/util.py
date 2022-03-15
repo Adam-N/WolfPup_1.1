@@ -97,7 +97,7 @@ class Util:
 
     async def reset_user_flags(self, ctx):
         self.server_db = self.db[str(ctx.guild.id)]['users']
-        reset_flags = {'flags': {'daily': True, 'daily_stamp': None, 'thank': True}}
+        reset_flags = {'flags': {'daily': True, 'daily_stamp': discord.utils.utcnow(), 'thank': True}}
         for member in ctx.guild.members:
             if not member.bot:
                 self.server_db.find_one_and_update({"_id": str(member.id)}, {'$set': reset_flags})

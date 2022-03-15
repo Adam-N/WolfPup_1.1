@@ -160,7 +160,7 @@ class WishWall(commands.Cog):
         # Sends an error if it isn't the right channel.
         if channel.id != config['channel']:
             await ctx.send('This command must be used in the correct channel', delete_after=10)
-            await ctx.message.delete()
+             
             return
 
         # Checks if it's the right channel.
@@ -192,7 +192,7 @@ class WishWall(commands.Cog):
                 # Deletes the command
                 await for_thread.create_thread(name=comm_desc)
                 self.bot.add_view(Buttons(self.bot), message_id=for_thread.id)
-                await ctx.message.delete()
+                 
 
 
 class Buttons(discord.ui.View):

@@ -11,7 +11,7 @@ class Leaderboard(commands.Cog):
         self.bot = bot
         self.db = Mongo.init_db(Mongo())
         self.server_db = None
-        self.leaderboards = {'exp': {'exp', 'experience', 'xp'},
+        self.leaderboards = {'gold.amount': {'gold'},
                              'thanks.thanks_received': {'thankee', 'thanks received'},
                              'thanks.thanks_given': {'thanker', 'thanks given'}}
 
@@ -20,7 +20,6 @@ class Leaderboard(commands.Cog):
         async with ctx.channel.typing():
             with open(f'config/{ctx.guild.id}/config.json', 'r') as f:
                 config = json.load(f)
-            await ctx.message.delete()
             self.server_db = self.db[str(ctx.guild.id)]['users']
             leaderboard = None
             if args:
@@ -41,7 +40,6 @@ class Leaderboard(commands.Cog):
                     listing, list_user, f_name, user_str = '', '', '', ''
                     stat_1, stat_2, my_stat = None, None, None
                     for user in users:
-                        #try:
                         list_user = self.bot.get_user(int(user["_id"]))
 
                         try:
@@ -60,10 +58,6 @@ class Leaderboard(commands.Cog):
                         if rank <= 15:
                             listing += f'{user_str}\n'
                             rank += 1
-                        '''except (AttributeError, KeyError):
-                            config_channel = await self.bot.fetch_channel(config['channel_config']['config_channel'])
-                            await config_channel.send(f'Error. {user["_id"]} created the error.')
-                            continue'''
                     if my_stat is not None:
                         listing += f'\n__**Your Ranking:**__\n{my_stat}'
                     new_embed.add_field(name=f_name,

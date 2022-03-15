@@ -94,7 +94,7 @@ class Gold(commands.Cog, name='Gold'):
                             friend_value = 2
                         else:
                             friend_value = 1
-
+                        print(user['flags']['daily_stamp'])
                         # Checks to see if the last time they used daily was more than 36 hours ago
                         if (user['flags']['daily_stamp'].replace(tzinfo=pytz.timezone("UTC")) + dt.timedelta(
                                 hours=36)) < discord.utils.utcnow():
@@ -134,7 +134,7 @@ class Gold(commands.Cog, name='Gold'):
                         await self.gold_log(member.guild, member, change_value, ctx.channel, True, "Daily")
                     else:
                         # Deals with if someone already claimed their daily bonus.
-                        await ctx.message.delete()
+                         
                         await ctx.send(
                             embed=discord.Embed(title='You\'ve already claimed your daily bonus today!'),
                             delete_after=5)
@@ -174,8 +174,8 @@ class Gold(commands.Cog, name='Gold'):
         user = self.server_db.find_one({'_id': str(ctx.author.id)})
 
         # Checks for negative gold
-        if user['gold']['amount'] - change < 0:
-            await ctx.sent('User cannot have a negative amount of Gold', delete_after=5)
+        if user['gold']['amount'] + change < 0:
+            await ctx.send('User cannot have a negative amount of Gold', delete_after=5)
             return
 
         # Changes the gold
@@ -320,6 +320,7 @@ class Gold(commands.Cog, name='Gold'):
                 self.server_db.find_one_and_update({'_id': str(message.author.id)},
                                                    {'$inc': {'gold.amount': gold_change}})
                 # Increases the daily count.
+                # Commented out for testing purposes
                 # self.server_db.find_one_and_update({'_id': str(message.author.id)},
                 #                                   {'$inc': {'gold.daily_count': 1}})
                 # Logs gold change.
@@ -340,13 +341,14 @@ class Gold(commands.Cog, name='Gold'):
         # Get's DB information
         self.server_db = self.db[str(ctx.guild.id)]['users']
         # Base values for the reset.
-        reset_flags = {'flags': {'daily': True, 'daily_stamp': None, 'thank': True}}
+        reset_flags = {'flags': {'daily': True, 'daily_stamp': discord.utils.utcnow(), 'thank': True}}
         # Resets all the values for all members.
         for member in ctx.guild.members:
             if not member.bot:
                 self.server_db.find_one_and_update({"_id": str(member.id)}, {'$set': reset_flags})
                 self.server_db.find_one_and_update({'_id': str(member.id)}, {'$set':
                                                                                  {'gold.daily_count': 0}})
+        await ctx.send("Done")
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):

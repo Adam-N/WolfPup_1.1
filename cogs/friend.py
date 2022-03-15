@@ -2,6 +2,7 @@ import random
 
 import discord
 from discord.ext import commands
+import pyimgur
 
 
 class Friend(commands.Cog):
@@ -70,7 +71,7 @@ class Friend(commands.Cog):
         embed.set_image(url=url)
         await ctx.channel.send(embed=embed)
 
-    @commands.command(description="For someone who needs sleep!")
+    @commands.command(description="For the god of thumbs")
     async def terry(self, ctx):
         """Terry Command"""
         name = ""
@@ -92,7 +93,7 @@ class Friend(commands.Cog):
         embed.set_image(url=url)
         await ctx.channel.send(embed=embed)
 
-    @commands.command(name="sherpa", aliases=['Sherpa'])
+    @commands.command()
     async def sherpa(self, ctx):
         await ctx.send(
             'https://docs.google.com/document/d/1NSvJ5KsutXBTnjXfL2BgTi-Z7p4EdqXfruAQEtb32VU/edit?usp=sharing')

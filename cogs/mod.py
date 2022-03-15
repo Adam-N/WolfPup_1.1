@@ -7,8 +7,10 @@ import datetime as dt
 
 from discord.ext.commands import has_permissions
 
+from cogs.profile import Profile
 from lib.mongo import Mongo
 from lib.util import Util
+from master import Master
 
 
 class Mod(commands.Cog):
@@ -74,6 +76,20 @@ class Mod(commands.Cog):
             for i, role in enumerate(query):
                 await ctx.send(embed=discord.Embed(title=f'__{str(len(role.members))}__ users in {role.name}'))
 
+    @commands.command(hidden=True)
+    @commands.guild_only()
+    async def fix_db(self, ctx):
+        with open(f'config/{ctx.guild.id}/config.json', 'r') as f:
+            config = json.load(f)
+        config_channel = self.bot.get_channel(config['channel_config']['config_channel'])
+        self.server_db = self.db[str(ctx.guild.id)]['users']
+        for user in ctx.guild.members:
+            user_check = self.server_db.find_one({'_id': str(user.id)})
+            if user_check is None:
+                await Profile.build_profile(Profile(self.bot), ctx, user)
+        await ctx.send("Done")
+
+    """
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
         with open(f'config/{before.guild.id}/config.json', 'r') as f:
@@ -161,6 +177,6 @@ class Mod(commands.Cog):
                 await modlog_channel.send(embed=embed)
         except (AttributeError, discord.errors.HTTPException):
             return
-
+    """
 def setup(bot):
     bot.add_cog(Mod(bot))

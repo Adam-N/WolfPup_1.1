@@ -59,7 +59,6 @@ class Level(commands.Cog, name='Level'):
     @commands.command(name='stats', pass_context=True)
     async def stats(self, ctx, member: discord.Member = None):
         """Returns a user's current profile level and experience"""
-        await ctx.message.delete()
         member = member or ctx.author
         if await Util.check_channel(ctx, True):
             await self.add_experience(ctx, member, 0)
@@ -110,7 +109,6 @@ class Level(commands.Cog, name='Level'):
                         await self.update_experience(ctx.guild.id, member.id, daily_exp)
                         await ctx.send(embed=new_embed)
                     else:
-                        await ctx.message.delete()
                         pending = await ctx.send(
                             embed=discord.Embed(title='You\'ve already claimed your daily bonus today!'))
                         await asyncio.sleep(5)

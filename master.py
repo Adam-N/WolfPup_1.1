@@ -30,20 +30,17 @@ class Master(commands.Cog, name='Master'):
     @commands.is_owner()
     async def ping(self, ctx):
         """Shows the bot ping in milliseconds."""
-        await ctx.message.delete()
         if await Util.check_channel(ctx, True):
             await ctx.send(f':ping_pong: **Pong!**⠀{round(self.bot.latency, 3)}ms')
 
     @commands.command(name='uptime')
     async def uptime(self, ctx):
         """Shows the uptime for the bot."""
-        await ctx.message.delete()
         if await Util.check_channel(ctx, True):
             current_time = time()
             difference = int(round(current_time - self.start_time))
             time_converted = dt.timedelta(seconds=difference)
-            hours, remainder = divmod(time_converted.total_seconds(), 3600)
-            minutes, seconds = divmod(remainder, 60)
+            Util.deltaconv(int(time_converted.total_seconds()))
             new_embed = discord.Embed()
             new_embed.add_field(name="Uptime", value=f'{Util.deltaconv(int(time_converted.total_seconds()))}',
                                 inline=True)
@@ -127,7 +124,6 @@ class Master(commands.Cog, name='Master'):
                 if arg not in ['playing', 'listening', 'watching']:
                     await ctx.send('Only playing, streaming, listening or watching allowed as activities.',
                                    delete_after=5)
-                    await ctx.message.delete()
                     return
                 if arg == 'playing':
                     await self.bot.change_presence(activity=discord.Game(name=joined_status))
@@ -207,7 +203,10 @@ class Master(commands.Cog, name='Master'):
                     if member is None:
                         self.db[str(ctx.guild.id)].drop_collection('users')
                     else:
-                        self.db[str(ctx.guild.id)]['users'].find_one_and_delete({'_id': member.id})
+                        try:
+                            self.db[str(ctx.guild.id)]['users'].find_one_and_delete({'_id': member.id})
+                        except:
+                            pass
                     # pending = await Level.build_level(Level(self.bot), ctx, member, pending)
                     pending = await Profile.build_profile(Profile(self.bot), ctx, member, pending)
                     # pending = await Thank.build_thank(Thank(self.bot), ctx, member, pending)
@@ -226,7 +225,10 @@ class Master(commands.Cog, name='Master'):
                     if member is None:
                         self.db[str(ctx.guild.id)].drop_collection('users')
                     else:
-                        self.db[str(ctx.guild.id)]['users'].find_one_and_delete({'_id': member.id})
+                        try:
+                            self.db[str(ctx.guild.id)]['users'].find_one_and_delete({'_id': member.id})
+                        except:
+                            pass
                     # pending = await Level.build_level(Level(self.bot), ctx, member, pending)
                     pending = await Profile.build_profile(Profile(self.bot), ctx, member, pending)
                     # pending = await Thank.build_thank(Thank(self.bot), ctx, member, pending)

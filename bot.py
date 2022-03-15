@@ -27,16 +27,15 @@ def get_prefix(bot, message):
 
 initial_cogs = ['master', 'cogs.mod', 'cogs.welcome',
                 'cogs.profile', 'cogs.friend', 'cogs.gold',
-                'cogs.games',  'cogs.starboard', 'cogs.timer', 'cogs.triumphant', 'cogs.wish',
+                'cogs.games',  'cogs.starboard', 'cogs.timer', 'cogs.triumphant',
                 'cogs.lfg']
 
-intents = discord.Intents.default()
-intents.members = True
-intents.messages = True
-intents.reactions = True
-intents.bans = True
+intents = discord.Intents(dm_messages=True, emojis=True, guild_messages=True,guild_reactions=True,guild_typing=True,
+                          guilds=True, integrations=True,members=True,messages=True, reactions=True, typing=True,
+                          bans=True)
 
-bot = commands.Bot(command_prefix=get_prefix, description='A bot designed for GoldxGuns', intents=intents)
+bot = commands.Bot(command_prefix=get_prefix, description='A bot designed for GoldxGuns', intents=intents,
+                   slash_commands=True)
 if __name__ == '__main__':
     for extension in initial_cogs:
         bot.load_extension(extension)
@@ -211,7 +210,7 @@ async def on_disconnect():
 
 print('\nLoading token and connecting to client...')
 token = open('token.txt', 'r').readline()
-# schedule.add_job(daily, 'cron', day='*', hour=18)
+schedule.add_job(daily, 'cron', day='*', hour=20)
 schedule.add_job(weekly, 'cron', week='*', day_of_week='sat', hour=22)
 # schedule.add_job(monthly, 'cron', month='*', day='1')
 schedule.start()

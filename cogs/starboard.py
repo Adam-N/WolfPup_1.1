@@ -1,3 +1,4 @@
+import asyncio
 import os
 import json
 import discord
@@ -16,6 +17,7 @@ class Starboard(commands.Cog, name='Starboard'):
         self.success_url = 'https://cdn.discordapp.com/attachments/767568459939708950/767568508414066739/Status_Indicators12.png'
         self.db = Mongo.init_db(Mongo())
         self.server_db = None
+        self.lock = asyncio.Lock()
         self.leaderboards = {"starboard.starred_messages", 'starboard.stars_given', 'starboard.self_starred'}
 
     @commands.command(name='init_starboard', hidden=True, aliases=['init_sb', 'sb_init'])
@@ -49,13 +51,14 @@ class Starboard(commands.Cog, name='Starboard'):
             channel = self.bot.get_channel(payload.channel_id)
             starboard_channel = self.bot.get_channel(config['starboard_config']['starboard_channel'])
             message = await channel.fetch_message(payload.message_id)
-            for react in message.reactions:
-                if react.emoji == config['starboard_config']['star_react']:
-                    list = await react.users().flatten()
-                    if message.author in list:
-                        self_starred = True
-                    reaction = react
-                    break
+            async with self.lock:
+                for react in message.reactions:
+                    if react.emoji == config['starboard_config']['star_react']:
+                        list = await react.users().flatten()
+                        if message.author in list:
+                            self_starred = True
+                        reaction = react
+                        break
             if channel.id != starboard_channel.id:
                 self.server_db = self.db[str(payload.guild_id)]['users']
                 starboard_db = self.db[str(payload.guild_id)]['starboard']
@@ -223,7 +226,7 @@ class Starboard(commands.Cog, name='Starboard'):
                     new_embed.set_footer(
                         text=f'{number_of_starred_messages} messages have been starred with {star_number} '
                              f'stars',
-                        icon_url=self.bot.user.avatar.url)
+                        icon_url=self.bot.user.display_avatar.url)
 
                     new_embed.add_field(name=f_name,
                                         value=listing,
@@ -238,7 +241,7 @@ class Starboard(commands.Cog, name='Starboard'):
             new_embed = discord.Embed(title=f':star: __**{user.display_name}\'s Starboard Stats**__ :star:',
                                       color=discord.Colour.gold())
             new_embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
-            new_embed.set_footer(text=f'Results provided by: {self.bot.user.name}', icon_url=self.bot.user.avatar.url)
+            new_embed.set_footer(text=f'Results provided by: {self.bot.user.name}', icon_url=self.bot.user.display_avatar.url)
             starboard_db = self.db[str(ctx.guild.id)]['starboard']
             self.server_db = self.db[str(ctx.guild.id)]['users']
             stat = 'star_number'
@@ -277,7 +280,7 @@ class Starboard(commands.Cog, name='Starboard'):
             new_embed = discord.Embed(title=f':star: __**Top Starred Messages**__ :star:',
                                       color=discord.Colour.gold())
             new_embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
-            new_embed.set_footer(text=f'Results provided by: {self.bot.user.name}', icon_url=self.bot.user.avatar.url)
+            new_embed.set_footer(text=f'Results provided by: {self.bot.user.name}', icon_url=self.bot.user.display_avatar.url)
             starboard_db = self.db[str(ctx.guild.id)]['starboard']
             if await Util.check_channel(ctx):
                 new_embed = discord.Embed(title=f':star: __**Leaderboard**__ :star:',
@@ -328,7 +331,7 @@ class Starboard(commands.Cog, name='Starboard'):
                                                {'$set': user})
         await ctx.send('Done')
 
-    @commands.command(name='build_sb_db', hidden=True, aliases=['rebuild_sb_db'])
+    @commands.command(hidden=True, name="build_sb")
     @commands.is_owner()
     async def build_sb(self, ctx, member: discord.Member = None, pending=None, dt=None):
         self.server_db = self.db[str(ctx.guild.id)]['users']
